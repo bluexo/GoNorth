@@ -10,6 +10,7 @@ using GoNorth.Data.User;
 using Microsoft.Extensions.Logging;
 using Microsoft.AspNetCore.Identity;
 using GoNorth.Services.User;
+using System.Linq;
 
 namespace GoNorth.Controllers
 {
@@ -23,7 +24,7 @@ namespace GoNorth.Controllers
         /// <summary>
         /// User DB Access
         /// </summary>
-        private readonly IUserDbAccess _userDbAccess; 
+        private readonly IUserDbAccess _userDbAccess;
 
         /// <summary>
         /// User Creator
@@ -64,12 +65,12 @@ namespace GoNorth.Controllers
         {
             // Check Data
             bool displayPage = await DisplayPage();
-            if(!displayPage)
+            if (!displayPage)
             {
                 _logger.LogWarning("User tried to access first time deployment page while not valid.");
                 return StatusCode((int)HttpStatusCode.NotFound);
             }
-            
+
             FirstTimeDeploymentViewModel viewModel = new FirstTimeDeploymentViewModel();
             return View(viewModel);
         }
@@ -85,7 +86,7 @@ namespace GoNorth.Controllers
         {
             // Check Data
             bool displayPage = await DisplayPage();
-            if(!displayPage)
+            if (!displayPage)
             {
                 _logger.LogWarning("User tried to post to first time deployment page while not valid.");
                 return StatusCode((int)HttpStatusCode.NotFound);
@@ -94,7 +95,7 @@ namespace GoNorth.Controllers
             // Check Password
             if (ModelState.IsValid)
             {
-                if(viewModel.FirstTimeDeploymentPassword != _firstTimeDeploymentPassword)
+                if (viewModel.FirstTimeDeploymentPassword != _firstTimeDeploymentPassword)
                 {
                     // Dont give feedback to not help attackers
                     _logger.LogWarning("User tried to create new admin user in first time deployment page with wrong password.");
@@ -104,19 +105,19 @@ namespace GoNorth.Controllers
                 try
                 {
                     IdentityResult result = await _userCreator.CreateUser(Url, Request.Scheme, viewModel.Name, viewModel.Email, viewModel.Password, RoleNames.Administrator);
-                    if(!result.Succeeded)
+                    if (!result.Succeeded)
                     {
-                        _logger.LogInformation("Error while creating user");
+                        _logger.LogError($"Error while creating user {result.Errors.First()?.Description}");
                     }
                 }
-                catch(Exception ex)
+                catch (Exception ex)
                 {
                     _logger.LogError(ex, "Error while creating user");
                 }
 
                 return RedirectToAction("Login", "Account");
             }
-            
+
             return View(viewModel);
         }
 
@@ -126,7 +127,7 @@ namespace GoNorth.Controllers
         /// <returns>true if the page can be displayed, else false</returns>
         private async Task<bool> DisplayPage()
         {
-            if(string.IsNullOrEmpty(_firstTimeDeploymentPassword))
+            if (string.IsNullOrEmpty(_firstTimeDeploymentPassword))
             {
                 return false;
             }
@@ -135,12 +136,12 @@ namespace GoNorth.Controllers
             try
             {
                 bool adminUserExists = await _userDbAccess.DoesAdminUserExist();
-                if(adminUserExists)
+                if (adminUserExists)
                 {
                     return false;
                 }
             }
-            catch(Exception ex)
+            catch (Exception ex)
             {
                 _logger.LogError(ex, "Error while checking if first time deployment page should be displayed");
                 return false;

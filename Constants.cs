@@ -13,6 +13,6 @@ namespace GoNorth
         /// <summary>
         /// Minium Password Length
         /// </summary>
-        public const int MinPasswordLength = 8;
+        public const int MinPasswordLength = 6;
     };
 }

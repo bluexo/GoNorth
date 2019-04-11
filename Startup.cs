@@ -82,7 +82,7 @@ namespace GoNorth
             // Add Identity
             services.AddIdentity<GoNorthUser, GoNorthRole>(options => {
                 // Password settings
-                options.Password.RequireDigit = true;
+                options.Password.RequireDigit = false;
                 options.Password.RequiredLength = Constants.MinPasswordLength;
                 options.Password.RequireNonAlphanumeric = false;
                 options.Password.RequireUppercase = true;
