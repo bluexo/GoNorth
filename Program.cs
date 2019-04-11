@@ -3,6 +3,7 @@ using Microsoft.AspNetCore;
 using Microsoft.AspNetCore.Hosting;
 using GoNorth.Logging;
 using Microsoft.Extensions.Configuration;
+using System.IO;
 
 namespace GoNorth
 {
@@ -17,18 +18,20 @@ namespace GoNorth
         /// <param name="args">Arguments</param>
         public static void Main(string[] args)
         {
-            BuildWebHost(args).Build().Run();
-        }
+            var config = new ConfigurationBuilder()
+               .SetBasePath(Directory.GetCurrentDirectory())
+               .AddJsonFile("appsettings.json", optional: true)
+               .AddCommandLine(args)
+               .Build();
 
-        /// <summary>
-        /// Builds the web Host
-        /// </summary>
-        /// <param name="args">Arguments</param>
-        /// <returns>WebHost</returns>
-        public static IWebHostBuilder BuildWebHost(string[] args) =>
-            WebHost.CreateDefaultBuilder(args)
-                .ConfigureAppConfiguration((context, config) => config.AddCommandLine(args))
+            var host = new WebHostBuilder()
+                .UseConfiguration(config)
                 .ConfigureLogging(builder => builder.AddFile())
-                .UseStartup<Startup>();
+                .UseKestrel()
+                .UseStartup<Startup>()
+                .Build();
+
+            host.Run();
+        }
     }
 }
