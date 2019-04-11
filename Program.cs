@@ -2,6 +2,7 @@
 using Microsoft.AspNetCore;
 using Microsoft.AspNetCore.Hosting;
 using GoNorth.Logging;
+using Microsoft.Extensions.Configuration;
 
 namespace GoNorth
 {
@@ -26,6 +27,7 @@ namespace GoNorth
         /// <returns>WebHost</returns>
         public static IWebHostBuilder BuildWebHost(string[] args) =>
             WebHost.CreateDefaultBuilder(args)
+                .ConfigureAppConfiguration((context, config) => config.AddCommandLine(args))
                 .ConfigureLogging(builder => builder.AddFile())
                 .UseStartup<Startup>();
     }
