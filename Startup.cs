@@ -78,7 +78,7 @@ namespace GoNorth
         public void ConfigureServices(IServiceCollection services)
         {
             ConfigurationData configData = Configuration.Get<ConfigurationData>();
-            
+
             // Add Identity
             services.AddIdentity<GoNorthUser, GoNorthRole>(options => {
                 // Password settings
