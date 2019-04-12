@@ -4,24 +4,24 @@
         (function(Localization) {
 
             // Start
-            GoNorth.DefaultNodeShapes.Localization.TypeNames["aika.Start"] = "Start";
+            GoNorth.DefaultNodeShapes.Localization.TypeNames["aika.Start"] = "��ʼ";
 
             // Finish
-            GoNorth.DefaultNodeShapes.Localization.TypeNames["aika.Finish"] = "Finish";
+            GoNorth.DefaultNodeShapes.Localization.TypeNames["aika.Finish"] = "���";
 
             Localization.Finish = {};
-            Localization.Finish.FinishName = "Name";
+            Localization.Finish.FinishName = "����";
             Localization.Finish.Colors = {
-                White: "White",
-                Red: "Red",
-                Green: "Green",
-                Blue: "Blue",
-                Yellow: "Yellow",
-                Purple: "Purple"
+                White: "��ɫ",
+                Red: "��ɫ",
+                Green: "��ɫ",
+                Blue: "��ɫ",
+                Yellow: "��ɫ",
+                Purple: "��ɫ"
             };
 
             // All Done
-            GoNorth.DefaultNodeShapes.Localization.TypeNames["aika.AllDone"] = "All done";
+            GoNorth.DefaultNodeShapes.Localization.TypeNames["aika.AllDone"] = "�����";
 
         }(Aika.Localization = Aika.Localization || {}));
     }(GoNorth.Aika = GoNorth.Aika || {}));

@@ -224,11 +224,12 @@ namespace GoNorth
             services.AddScoped<IDbSetup, MongoDbSetup>();
 
             // Localization
-            CultureInfo defaultCulture = new CultureInfo("en");
+            CultureInfo defaultCulture = new CultureInfo("zh");
             List<CultureInfo> supportedCultures = new List<CultureInfo>
             {
                 new CultureInfo("de"),
-                new CultureInfo("en")
+                new CultureInfo("en"),
+                new CultureInfo("zh")
             };
             services.AddJsonLocalization(options => {
                 options.FallbackCulture = defaultCulture;
@@ -251,20 +252,20 @@ namespace GoNorth
             services.AddSwaggerGen(c =>
             {
                 c.SwaggerDoc("v1", new Info 
-                    { 
-                        Title = "GoNorth API", 
-                        Version = "v1",
-                        Description = "A portal to build storys for RPGs and other open world games.",
-                        Contact = new Contact
-                        {
-                            Name = "Steffen Nörtershäuser"
-                        },
-                        License = new License
-                        {
-                            Name = "Use under MIT",
-                            Url = "https://github.com/steffendx/GoNorth/blob/master/LICENSE"
-                        }
-                    });
+                { 
+                    Title = "GoNorth API", 
+                    Version = "v1",
+                    Description = "A portal to build storys for RPGs and other open world games.",
+                    Contact = new Contact
+                    {
+                        Name = "Steffen Nörtershäuser"
+                    },
+                    License = new License
+                    {
+                        Name = "Use under MIT",
+                        Url = "https://github.com/steffendx/GoNorth/blob/master/LICENSE"
+                    }
+                });
 
                 string baseDirectory = AppDomain.CurrentDomain.BaseDirectory;
                 string commentsFileName = Assembly.GetExecutingAssembly().GetName().Name + ".XML";

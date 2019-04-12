@@ -4,24 +4,24 @@
         (function(Localization) {
 
             // Start
-            GoNorth.DefaultNodeShapes.Localization.TypeNames["aika.Start"] = "Start";
+            GoNorth.DefaultNodeShapes.Localization.TypeNames["aika.Start"] = "开始";
 
             // Finish
-            GoNorth.DefaultNodeShapes.Localization.TypeNames["aika.Finish"] = "Finish";
+            GoNorth.DefaultNodeShapes.Localization.TypeNames["aika.Finish"] = "完成";
 
             Localization.Finish = {};
-            Localization.Finish.FinishName = "Name";
+            Localization.Finish.FinishName = "名称";
             Localization.Finish.Colors = {
-                White: "White",
-                Red: "Red",
-                Green: "Green",
-                Blue: "Blue",
-                Yellow: "Yellow",
-                Purple: "Purple"
+                White: "白色",
+                Red: "红色",
+                Green: "绿色",
+                Blue: "蓝色",
+                Yellow: "黄色",
+                Purple: "紫色"
             };
 
             // All Done
-            GoNorth.DefaultNodeShapes.Localization.TypeNames["aika.AllDone"] = "All done";
+            GoNorth.DefaultNodeShapes.Localization.TypeNames["aika.AllDone"] = "已完成";
 
         }(Aika.Localization = Aika.Localization || {}));
     }(GoNorth.Aika = GoNorth.Aika || {}));
