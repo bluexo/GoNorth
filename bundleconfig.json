@@ -11,7 +11,6 @@
       "wwwroot/css/defaultNodes.css"
     ]
   },
-
   {
     "outputFileName": "wwwroot/lib/bootstrap-wysiwyg/bootstrap-wysiwyg.min.js",
     "inputFiles": [
@@ -47,12 +46,22 @@
     "sourceMap": false
   },
   {
+    "outputFileName": "wwwroot/lib/bootstrap-wysiwyg/locale/bootstrap-wysiwyg.zh.min.js",
+    "inputFiles": [
+      "wwwroot/lib/bootstrap-wysiwyg/locale/bootstrap-wysiwyg.zh.js"
+    ],
+    "minify": {
+      "enabled": true,
+      "renameLocals": true
+    },
+    "sourceMap": false
+  },
+  {
     "outputFileName": "wwwroot/lib/bootstrap-wysiwyg/bootstrap-wysiwyg.min.css",
     "inputFiles": [
       "wwwroot/lib/bootstrap-wysiwyg/bootstrap-wysiwyg.css"
     ]
   },
-
   {
     "outputFileName": "wwwroot/lib/namegen/namegen.min.js",
     "inputFiles": [
@@ -64,7 +73,6 @@
     },
     "sourceMap": false
   },
-
   {
     "outputFileName": "wwwroot/js/Shared/shared.lib.js",
     "inputFiles": [
@@ -117,8 +125,17 @@
     },
     "sourceMap": false
   },
-
-
+  {
+    "outputFileName": "wwwroot/js/Shared/nodeGraph/nodeLang.zh.min.js",
+    "inputFiles": [
+      "wwwroot/js/Shared/nodeGraph/nodeLang.zh.js"
+    ],
+    "minify": {
+      "enabled": true,
+      "renameLocals": true
+    },
+    "sourceMap": false
+  },
   {
     "outputFileName": "wwwroot/js/Timeline/timeline.viewmodel.min.js",
     "inputFiles": [
@@ -163,7 +180,6 @@
     },
     "sourceMap": false
   },
-
   {
     "outputFileName": "wwwroot/js/Manage/preferences.viewmodel.js",
     "inputFiles": [
@@ -186,7 +202,6 @@
     },
     "sourceMap": false
   },
-
   {
     "outputFileName": "wwwroot/js/Kortisto/overview.viewmodel.js",
     "inputFiles": [
@@ -234,7 +249,6 @@
     },
     "sourceMap": false
   },
-
   {
     "outputFileName": "wwwroot/js/Styr/overview.viewmodel.js",
     "inputFiles": [
@@ -281,7 +295,6 @@
     },
     "sourceMap": false
   },
-
   {
     "outputFileName": "wwwroot/js/Evne/overview.viewmodel.js",
     "inputFiles": [
@@ -310,11 +323,8 @@
     "outputFileName": "wwwroot/js/Evne/skill.viewmodel.js",
     "inputFiles": [
       "wwwroot/js/Shared/chooseObjectDialog/chooseObjectDialogViewModel.js",
-
       "wwwroot/js/Shared/flexFieldUtil.js",
-
       "wwwroot/js/ImplementationStatus/compareDialog/viewmodel.js",
-
       "wwwroot/js/FlexFieldDatabase/objectForm/flexFieldScriptSettings.js",
       "wwwroot/js/FlexFieldDatabase/objectForm/flexFieldBase.js",
       "wwwroot/js/FlexFieldDatabase/objectForm/singleLineFlexField.js",
@@ -325,11 +335,9 @@
       "wwwroot/js/FlexFieldDatabase/objectForm/flexFieldManager.js",
       "wwwroot/js/FlexFieldDatabase/objectForm/flexFieldHandlingViewmodel.js",
       "wwwroot/js/FlexFieldDatabase/objectForm/baseViewmodel.js",
-
       "wwwroot/js/Shared/nodeGraph/questStates.js",
       "wwwroot/js/Shared/nodeGraph/sharedObjectLoading.js",
       "wwwroot/js/Shared/nodeGraph/baseViewModel.js",
-
       "wwwroot/js/Shared/nodeGraph/conditions/conditionManager.js",
       "wwwroot/js/Shared/nodeGraph/conditions/baseCondition.js",
       "wwwroot/js/Shared/nodeGraph/conditions/groupCondition.js",
@@ -343,7 +351,6 @@
       "wwwroot/js/Shared/nodeGraph/conditions/checkGameTimeCondition.js",
       "wwwroot/js/Shared/nodeGraph/conditionNode.js",
       "wwwroot/js/Shared/nodeGraph/conditionDialog.js",
-
       "wwwroot/js/Shared/nodeGraph/actionNode.js",
       "wwwroot/js/Shared/nodeGraph/actions/baseAction.js",
       "wwwroot/js/Shared/nodeGraph/actions/changeValueAction.js",
@@ -354,9 +361,7 @@
       "wwwroot/js/Shared/nodeGraph/actions/setPlayerStateAction.js",
       "wwwroot/js/Evne/skillForm/actions/setTargetNpcStateAction.js",
       "wwwroot/js/Shared/nodeGraph/actions/waitAction.js",
-
       "wwwroot/js/Evne/skillForm/textNode.js",
-
       "wwwroot/js/Evne/skillForm/viewmodel.js"
     ],
     "minify": {
@@ -387,7 +392,17 @@
     },
     "sourceMap": false
   },
-
+  {
+    "outputFileName": "wwwroot/js/Evne/evneLang.zh.js",
+    "inputFiles": [
+      "wwwroot/js/Evne/skillForm/skillLang.zh.js"
+    ],
+    "minify": {
+      "enabled": true,
+      "renameLocals": true
+    },
+    "sourceMap": false
+  },
   {
     "outputFileName": "wwwroot/js/Kirja/page.viewmodel.js",
     "inputFiles": [
@@ -412,7 +427,6 @@
     },
     "sourceMap": false
   },
-
   {
     "outputFileName": "wwwroot/js/Karta/manageMaps.viewmodel.min.js",
     "inputFiles": [
@@ -453,35 +467,25 @@
     },
     "sourceMap": false
   },
-
   {
     "outputFileName": "wwwroot/js/Tale/dialog.viewmodel.js",
     "inputFiles": [
       "wwwroot/js/Shared/chooseObjectDialog/chooseObjectDialogViewModel.js",
-
       "wwwroot/js/ImplementationStatus/compareDialog/viewmodel.js",
-
       "wwwroot/js/Shared/nodeGraph/sharedObjectLoading.js",
       "wwwroot/js/Shared/nodeGraph/questStates.js",
       "wwwroot/js/Shared/nodeGraph/baseViewModel.js",
-
       "wwwroot/js/Shared/flexFieldUtil.js",
-      
       "wwwroot/js/Tale/shared/configKeys.js",
-
       "wwwroot/js/Tale/dialogForm/textLine.js",
-
       "wwwroot/js/Tale/dialogForm/choiceNode.js",
-
       "wwwroot/js/Shared/nodeGraph/actionNode.js",
-
       "wwwroot/js/FlexFieldDatabase/objectForm/flexFieldScriptSettings.js",
       "wwwroot/js/FlexFieldDatabase/objectForm/flexFieldBase.js",
       "wwwroot/js/FlexFieldDatabase/objectForm/multiLineFlexField.js",
       "wwwroot/js/FlexFieldDatabase/objectForm/numberFlexField.js",
       "wwwroot/js/FlexFieldDatabase/objectForm/optionFlexField.js",
       "wwwroot/js/FlexFieldDatabase/objectForm/fieldGroup.js",
-      
       "wwwroot/js/Shared/nodeGraph/actions/baseAction.js",
       "wwwroot/js/Shared/nodeGraph/actions/changeValueAction.js",
       "wwwroot/js/Shared/nodeGraph/actions/changeValueChooseObjectAction.js",
@@ -512,7 +516,6 @@
       "wwwroot/js/Tale/dialogForm/actions/playAnimationAction.js",
       "wwwroot/js/Tale/dialogForm/actions/playNpcAnimationAction.js",
       "wwwroot/js/Tale/dialogForm/actions/playPlayerAnimationAction.js",
-
       "wwwroot/js/Shared/nodeGraph/conditions/conditionManager.js",
       "wwwroot/js/Shared/nodeGraph/conditions/baseCondition.js",
       "wwwroot/js/Shared/nodeGraph/conditions/groupCondition.js",
@@ -537,7 +540,6 @@
       "wwwroot/js/Tale/dialogForm/conditions/checkNpcNotLearnedSkillCondition.js",
       "wwwroot/js/Shared/nodeGraph/conditionNode.js",
       "wwwroot/js/Shared/nodeGraph/conditionDialog.js",
-
       "wwwroot/js/Tale/dialogForm/viewmodel.js"
     ],
     "minify": {
@@ -569,6 +571,17 @@
     "sourceMap": false
   },
   {
+    "outputFileName": "wwwroot/js/Tale/taleLang.zh.js",
+    "inputFiles": [
+      "wwwroot/js/Tale/dialogForm/taleLang.zh.js"
+    ],
+    "minify": {
+      "enabled": true,
+      "renameLocals": true
+    },
+    "sourceMap": false
+  },
+  {
     "outputFileName": "wwwroot/js/Tale/config.viewmodel.js",
     "inputFiles": [
       "wwwroot/js/Tale/shared/configKeys.js",
@@ -581,18 +594,13 @@
     },
     "sourceMap": false
   },
-
-
   {
     "outputFileName": "wwwroot/js/Aika/chapterOverview.viewmodel.js",
     "inputFiles": [
       "wwwroot/js/Shared/nodeGraph/baseViewModel.js",
-
       "wwwroot/js/Aika/shared/viewModelHelper.js",
       "wwwroot/js/Aika/shared/chapterDetailNodeHelper.js",
-
       "wwwroot/js/Aika/chapterOverview/chapterNode.js",
-
       "wwwroot/js/Aika/chapterOverview/viewmodel.js"
     ],
     "minify": {
@@ -605,18 +613,14 @@
     "outputFileName": "wwwroot/js/Aika/chapterDetail.viewmodel.js",
     "inputFiles": [
       "wwwroot/js/Shared/chooseObjectDialog/chooseObjectDialogViewModel.js",
-
       "wwwroot/js/Shared/nodeGraph/baseViewModel.js",
-
       "wwwroot/js/Aika/shared/viewModelHelper.js",
       "wwwroot/js/Aika/shared/chapterDetailNodeHelper.js",
       "wwwroot/js/Aika/shared/finishNode.js",
       "wwwroot/js/Aika/shared/startNode.js",
       "wwwroot/js/Aika/shared/allDoneNode.js",
-
       "wwwroot/js/Aika/chapterDetail/questNode.js",
       "wwwroot/js/Aika/chapterDetail/chapterDetailNode.js",
-
       "wwwroot/js/Aika/chapterDetail/viewmodel.js"
     ],
     "minify": {
@@ -629,11 +633,8 @@
     "outputFileName": "wwwroot/js/Aika/quest.viewmodel.js",
     "inputFiles": [
       "wwwroot/js/Shared/chooseObjectDialog/chooseObjectDialogViewModel.js",
-
       "wwwroot/js/ImplementationStatus/compareDialog/viewmodel.js",
-
       "wwwroot/js/Shared/flexFieldUtil.js",
-      
       "wwwroot/js/FlexFieldDatabase/objectForm/flexFieldScriptSettings.js",
       "wwwroot/js/FlexFieldDatabase/objectForm/flexFieldBase.js",
       "wwwroot/js/FlexFieldDatabase/objectForm/singleLineFlexField.js",
@@ -643,11 +644,9 @@
       "wwwroot/js/FlexFieldDatabase/objectForm/fieldGroup.js",
       "wwwroot/js/FlexFieldDatabase/objectForm/flexFieldManager.js",
       "wwwroot/js/FlexFieldDatabase/objectForm/flexFieldHandlingViewmodel.js",
-
       "wwwroot/js/Shared/nodeGraph/questStates.js",
       "wwwroot/js/Shared/nodeGraph/sharedObjectLoading.js",
       "wwwroot/js/Shared/nodeGraph/baseViewModel.js",
-
       "wwwroot/js/Shared/nodeGraph/conditions/conditionManager.js",
       "wwwroot/js/Shared/nodeGraph/conditions/baseCondition.js",
       "wwwroot/js/Shared/nodeGraph/conditions/groupCondition.js",
@@ -666,7 +665,6 @@
       "wwwroot/js/Shared/nodeGraph/conditions/checkPlayerNotLearnedSkillCondition.js",
       "wwwroot/js/Shared/nodeGraph/conditionNode.js",
       "wwwroot/js/Shared/nodeGraph/conditionDialog.js",
-
       "wwwroot/js/Shared/nodeGraph/actionNode.js",
       "wwwroot/js/Shared/nodeGraph/actions/baseAction.js",
       "wwwroot/js/Shared/nodeGraph/actions/changeValueAction.js",
@@ -684,13 +682,10 @@
       "wwwroot/js/Shared/nodeGraph/actions/playerForgetSkillAction.js",
       "wwwroot/js/Shared/nodeGraph/actions/changeSkillValueAction.js",
       "wwwroot/js/Shared/nodeGraph/actions/changePlayerSkillValueAction.js",
-
       "wwwroot/js/Aika/shared/finishNode.js",
       "wwwroot/js/Aika/shared/startNode.js",
       "wwwroot/js/Aika/shared/allDoneNode.js",
-
       "wwwroot/js/Aika/quest/textNode.js",
-
       "wwwroot/js/Aika/quest/viewmodel.js"
     ],
     "minify": {
@@ -728,6 +723,20 @@
     "sourceMap": false
   },
   {
+    "outputFileName": "wwwroot/js/Aika/aikaLang.zh.js",
+    "inputFiles": [
+      "wwwroot/js/Aika/shared/sharedLang.zh.js",
+      "wwwroot/js/Aika/chapterOverview/chapterOverviewLang.zh.js",
+      "wwwroot/js/Aika/chapterDetail/chapterDetailLang.zh.js",
+      "wwwroot/js/Aika/quest/questLang.zh.js"
+    ],
+    "minify": {
+      "enabled": true,
+      "renameLocals": true
+    },
+    "sourceMap": false
+  },
+  {
     "outputFileName": "wwwroot/js/Aika/questList.viewmodel.js",
     "inputFiles": [
       "wwwroot/js/Aika/questList/viewmodel.js"
@@ -738,7 +747,6 @@
     },
     "sourceMap": false
   },
-
   {
     "outputFileName": "wwwroot/js/Task/taskBoard.viewmodel.js",
     "inputFiles": [
@@ -781,7 +789,6 @@
     },
     "sourceMap": false
   },
-
   {
     "outputFileName": "wwwroot/js/ImplementationStatus/overview.viewmodel.js",
     "inputFiles": [
@@ -801,7 +808,6 @@
     },
     "sourceMap": false
   },
-
   {
     "outputFileName": "wwwroot/js/Export/manageTemplate.viewmodel.js",
     "inputFiles": [
@@ -843,7 +849,6 @@
       "wwwroot/js/Export/functionGenerationCondition/conditions/currentActionTypeCondition.js",
       "wwwroot/js/Export/functionGenerationCondition/conditions/childActionTypeCondition.js",
       "wwwroot/js/Shared/nodeGraph/conditionDialog.js",
-
       "wwwroot/js/Export/functionGenerationCondition/viewmodel.js"
     ],
     "minify": {
