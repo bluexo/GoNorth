@@ -1,88 +1,87 @@
-(function (GoNorth) {
+(function(GoNorth) {
     "use strict";
-    (function (Tale) {
-        (function (Localization) {
+    (function(Tale) {
+        (function(Localization) {
 
             Localization.ViewModel = {};
-            Localization.ViewModel.ChooseItem = "Ñ¡ÔñµÀ¾ß";
-            Localization.ViewModel.ChooseQuest = "Ñ¡Ôñ¹Ø¿¨";
-            Localization.ViewModel.ChooseNpc = "Ñ¡ÔñNPC";
-            Localization.ViewModel.ChooseSkill = "Ñ¡Ôñ¼¼ÄÜ";
+            Localization.ViewModel.ChooseItem = "Ñ¡ï¿½ï¿½ï¿½ï¿½ï¿½";
+            Localization.ViewModel.ChooseQuest = "Ñ¡ï¿½ï¿½Ø¿ï¿½";
+            Localization.ViewModel.ChooseNpc = "Ñ¡ï¿½ï¿½NPC";
+            Localization.ViewModel.ChooseSkill = "Ñ¡ï¿½ï¿½ï¿½ï¿½";
 
             // Text Lines
-            GoNorth.DefaultNodeShapes.Localization.TypeNames["tale.PlayerText"] = "Íæ¼Ò¹ÊÊÂÏß";
-            GoNorth.DefaultNodeShapes.Localization.TypeNames["tale.NpcText"] = "NPC¹ÊÊÂÏß";
+            GoNorth.DefaultNodeShapes.Localization.TypeNames["tale.PlayerText"] = "ï¿½ï¿½Ò¹ï¿½ï¿½ï¿½ï¿½ï¿½";
+            GoNorth.DefaultNodeShapes.Localization.TypeNames["tale.NpcText"] = "NPCï¿½ï¿½ï¿½ï¿½ï¿½ï¿½";
 
-            Localization.PlayerTextPlaceHolder = "Íæ¼Ò¹ÊÊÂÏß";
-            Localization.NpcTextPlaceHolder = "NPC¹ÊÊÂÏß";
+            Localization.PlayerTextPlaceHolder = "ï¿½ï¿½Ò¹ï¿½ï¿½ï¿½ï¿½ï¿½";
+            Localization.NpcTextPlaceHolder = "NPCï¿½ï¿½ï¿½ï¿½ï¿½ï¿½";
 
             // Choice
-            GoNorth.DefaultNodeShapes.Localization.TypeNames["tale.Choice"] = "Ñ¡Ôñ";
+            GoNorth.DefaultNodeShapes.Localization.TypeNames["tale.Choice"] = "Ñ¡ï¿½ï¿½";
 
             Localization.Choices = {};
 
-            Localization.Choices.ChoiceText = "Ñ¡ÔñÎÄ±¾";
+            Localization.Choices.ChoiceText = "Ñ¡ï¿½ï¿½ï¿½Ä±ï¿½";
 
-            Localization.Choices.AddNewChoice = "Ìí¼ÓÑ¡Ôñ";
-            Localization.Choices.MoveUpToolTip = "ÉÏÒÆÑ¡Ôñ";
-            Localization.Choices.MoveDownToolTip = "ÏÂÒÆÑ¡Ôñ";
-            Localization.Choices.EditConditionToolTip = "±à¼­Ìõ¼þ";
-            Localization.Choices.AllowMultipleSelectionToolTip = "ÔÊÐíÍæ¼ÒÑ¡Ôñ¶àÖÖ½á¾ÖµÄ¹ÊÊÂÏß";
-            Localization.Choices.DeleteToolTip = "É¾³ýÑ¡Ôñ";
+            Localization.Choices.AddNewChoice = "ï¿½ï¿½ï¿½Ñ¡ï¿½ï¿½";
+            Localization.Choices.MoveUpToolTip = "ï¿½ï¿½ï¿½ï¿½Ñ¡ï¿½ï¿½";
+            Localization.Choices.MoveDownToolTip = "ï¿½ï¿½ï¿½ï¿½Ñ¡ï¿½ï¿½";
+            Localization.Choices.EditConditionToolTip = "ï¿½à¼­ï¿½ï¿½ï¿½ï¿½";
+            Localization.Choices.AllowMultipleSelectionToolTip = "ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ñ¡ï¿½ï¿½ï¿½ï¿½Ö½ï¿½ÖµÄ¹ï¿½ï¿½ï¿½ï¿½ï¿½";
+            Localization.Choices.DeleteToolTip = "É¾ï¿½ï¿½Ñ¡ï¿½ï¿½";
 
             // Action
             Localization.Actions = {};
 
-            Localization.Actions.ChangeNpcValueLabel = "Ñ¡Ôñ NPC Öµ";
+            Localization.Actions.ChangeNpcValueLabel = "Ñ¡ï¿½ï¿½ NPC Öµ";
 
-            Localization.Actions.ChooseItem = "<Ñ¡ÔñµÀ¾ß>";
-            Localization.Actions.SpawnItemInPlayerInventoryLabel = "Éú³ÉµÀ¾ßÔÚÍæ¼Ò±³°ü";
-            Localization.Actions.SpawnItemInNpcInventoryLabel = "Éú³ÉµÀ¾ßÔÚ NPC ±³°ü";
-            Localization.Actions.TransferItemToPlayerInventoryLabel = "½«µÀ¾ß¸øÓèÍæ¼Ò";
-            Localization.Actions.TransferItemToNpcInventoryLabel = "½«µÀ¾ß¸øÓè NPC";
-            Localization.Actions.ItemQuantity = "ÊýÁ¿ (Ä¬ÈÏ = 1):"
+            Localization.Actions.ChooseItem = "<Ñ¡ï¿½ï¿½ï¿½ï¿½ï¿½>";
+            Localization.Actions.SpawnItemInPlayerInventoryLabel = "ï¿½ï¿½ï¿½Éµï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ò±ï¿½ï¿½ï¿½";
+            Localization.Actions.SpawnItemInNpcInventoryLabel = "ï¿½ï¿½ï¿½Éµï¿½ï¿½ï¿½ï¿½ï¿½ NPC ï¿½ï¿½ï¿½ï¿½";
+            Localization.Actions.TransferItemToPlayerInventoryLabel = "ï¿½ï¿½ï¿½ï¿½ï¿½ß¸ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½";
+            Localization.Actions.TransferItemToNpcInventoryLabel = "ï¿½ï¿½ï¿½ï¿½ï¿½ß¸ï¿½ï¿½ï¿½ NPC";
+            Localization.Actions.ItemQuantity = "ï¿½ï¿½ï¿½ï¿½ (Ä¬ï¿½ï¿½ = 1):"
 
-            Localization.Actions.SetNpcStateLabel = "¸Ä±ä NPC ×´Ì¬";
+            Localization.Actions.SetNpcStateLabel = "ï¿½Ä±ï¿½ NPC ×´Ì¬";
 
-            Localization.Actions.NpcLearnsSkillLabel = "NPC Ñ§Ï°¼¼ÄÜ";
-            Localization.Actions.NpcForgetSkillLabel = "NPC ÒÅÍü¼¼ÄÜ";
+            Localization.Actions.NpcLearnsSkillLabel = "NPC Ñ§Ï°ï¿½ï¿½ï¿½ï¿½";
+            Localization.Actions.NpcForgetSkillLabel = "NPC ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½";
 
-            Localization.Actions.ChangeNpcSkillValueLabel = "¸Ä±ä NPC ¼¼ÄÜµã";
+            Localization.Actions.ChangeNpcSkillValueLabel = "ï¿½Ä±ï¿½ NPC ï¿½ï¿½ï¿½Üµï¿½";
 
-            Localization.Actions.PersistDialogStateLabel = "±£´æ¶Ô»°×´Ì¬";
-            Localization.Actions.PersistDialogStateWillContinueOnThisPointNextTalk = "´Ó½Úµãµ½ÏÂ´ÎÍæ¼ÒºÍNPCµÄ¶Ô»°,´Ë¶Ô»°¿ÉÒÔ¼ÌÐø.";
+            Localization.Actions.PersistDialogStateLabel = "ï¿½ï¿½ï¿½ï¿½Ô»ï¿½×´Ì¬";
+            Localization.Actions.PersistDialogStateWillContinueOnThisPointNextTalk = "ï¿½Ó½Úµãµ½ï¿½Â´ï¿½ï¿½ï¿½Òºï¿½NPCï¿½Ä¶Ô»ï¿½,ï¿½Ë¶Ô»ï¿½ï¿½ï¿½ï¿½Ô¼ï¿½ï¿½ï¿½.";
 
-            Localization.Actions.OpenShopLabel = "´ò¿ªÉÌ³Ç";
-            Localization.Actions.WillOpenAShopForTheCurrentNpc = "½«»áºÍµ±Ç°NPC¿ªÊ¼Ò»³¡½»Ò×.";
+            Localization.Actions.OpenShopLabel = "ï¿½ï¿½ï¿½Ì³ï¿½";
+            Localization.Actions.WillOpenAShopForTheCurrentNpc = "ï¿½ï¿½ï¿½ï¿½Íµï¿½Ç°NPCï¿½ï¿½Ê¼Ò»ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½.";
 
-            Localization.Actions.AnimationPlaceholder = "¶¯»­Ãû";
-            Localization.Actions.PlayNpcAnimationLabel = "²¥·Å NPC ¶¯»­";
-            Localization.Actions.PlayPlayerAnimationLabel = "²¥·ÅÍæ¼Ò¶¯»­";
+            Localization.Actions.AnimationPlaceholder = "ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½";
+            Localization.Actions.PlayNpcAnimationLabel = "ï¿½ï¿½ï¿½ï¿½ NPC ï¿½ï¿½ï¿½ï¿½";
+            Localization.Actions.PlayPlayerAnimationLabel = "ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ò¶ï¿½ï¿½ï¿½";
 
             // Condition
             Localization.Conditions = {};
-            Localization.Conditions.CheckNpcValueLabel = "¼ì²é NPC Öµ";
+            Localization.Conditions.CheckNpcValueLabel = "ï¿½ï¿½ï¿½ NPC Öµ";
             Localization.Conditions.NpcLabel = "Npc";
 
-            Localization.Conditions.CheckPlayerInventoryLabel = "¼ì²éÍæ¼Ò±³°ü";
-            Localization.Conditions.PlayerInventoryLabel = "Íæ¼Ò±³°ü";
-            Localization.Conditions.CheckNpcInventoryLabel = "¼ì²é NPC ±³°ü";
-            Localization.Conditions.NpcInventoryLabel = "NPC ±³°ü";
-            Localization.Conditions.ChooseItem = "<Ñ¡ÔñµÀ¾ß>";
-            Localization.Conditions.OpenItemTooltip = "´ò¿ªÒÑÑ¡µÀ¾ß";
-            Localization.Conditions.ItemOperatorHasAtLeast = "ÊÇ·ñÎª×îºóÒ»¸ö";
-            Localization.Conditions.ItemOperatorHasMaximum = "ÊÇ·ñÎª×î´óµÄ";
-            Localization.Conditions.ItemCount = "ÊýÁ¿";
+            Localization.Conditions.CheckPlayerInventoryLabel = "ï¿½ï¿½ï¿½ï¿½ï¿½Ò±ï¿½ï¿½ï¿½";
+            Localization.Conditions.PlayerInventoryLabel = "ï¿½ï¿½Ò±ï¿½ï¿½ï¿½";
+            Localization.Conditions.CheckNpcInventoryLabel = "ï¿½ï¿½ï¿½ NPC ï¿½ï¿½ï¿½ï¿½";
+            Localization.Conditions.NpcInventoryLabel = "NPC ï¿½ï¿½ï¿½ï¿½";
+            Localization.Conditions.ChooseItem = "<Ñ¡ï¿½ï¿½ï¿½ï¿½ï¿½>";
+            Localization.Conditions.OpenItemTooltip = "ï¿½ï¿½ï¿½ï¿½Ñ¡ï¿½ï¿½ï¿½ï¿½";
+            Localization.Conditions.ItemOperatorHasAtLeast = "ï¿½Ç·ï¿½Îªï¿½ï¿½ï¿½Ò»ï¿½ï¿½";
+            Localization.Conditions.ItemOperatorHasMaximum = "ï¿½Ç·ï¿½Îªï¿½ï¿½ï¿½ï¿½";
+            Localization.Conditions.ItemCount = "ï¿½ï¿½ï¿½ï¿½";
 
-            Localization.Conditions.CheckChooseNpcSkillValueLabel = "¼ì²é NPC ¼¼ÄÜµã";
+            Localization.Conditions.CheckChooseNpcSkillValueLabel = "ï¿½ï¿½ï¿½ NPC ï¿½ï¿½ï¿½Üµï¿½";
             Localization.Conditions.NpcSkillPrefix = "Npc ";
 
-            Localization.Conditions.CheckNpcLearnedSkillLabel = "Npc ¿ÉÒÔÊÕÓÃ¼¼ÄÜ";
-            Localization.Conditions.CheckNpcLearnedSkillPrefixLabel = "NPC ¿ÉÒÔÊ¹ÓÃ ";
+            Localization.Conditions.CheckNpcLearnedSkillLabel = "Npc ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ã¼ï¿½ï¿½ï¿½";
+            Localization.Conditions.CheckNpcLearnedSkillPrefixLabel = "NPC ï¿½ï¿½ï¿½ï¿½Ê¹ï¿½ï¿½ ";
 
-            Localization.Conditions.CheckNpcNotLearnedSkillLabel = "Npc ÎÞ·¨Ê¹ÓÃ¼¼ÄÜ";
-            Localization.Conditions.CheckNpcNotLearnedSkillPrefixLabel = "Npc ÎÞ·¨Ê¹ÓÃ ";
-
+            Localization.Conditions.CheckNpcNotLearnedSkillLabel = "Npc ï¿½Þ·ï¿½Ê¹ï¿½Ã¼ï¿½ï¿½ï¿½";
+            Localization.Conditions.CheckNpcNotLearnedSkillPrefixLabel = "Npc ï¿½Þ·ï¿½Ê¹ï¿½ï¿½ ";
         }(Tale.Localization = Tale.Localization || {}));
     }(GoNorth.Tale = GoNorth.Tale || {}));
 }(window.GoNorth = window.GoNorth || {}));

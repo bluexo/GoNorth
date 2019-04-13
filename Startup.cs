@@ -229,7 +229,7 @@ namespace GoNorth
             {
                 new CultureInfo("de"),
                 new CultureInfo("en"),
-                new CultureInfo("zh")
+                //new CultureInfo("zh")
             };
             services.AddJsonLocalization(options => {
                 options.FallbackCulture = defaultCulture;

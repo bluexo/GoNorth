@@ -3,41 +3,13 @@
     (function(Aika) {
         (function(Localization) {
 
-            // Start
-            GoNorth.DefaultNodeShapes.Localization.TypeNames["aika.Start"] = "¿ªÊ¼";
-
-            // Finish
-            GoNorth.DefaultNodeShapes.Localization.TypeNames["aika.Finish"] = "Íê³É";
-
-            Localization.Finish = {};
-            Localization.Finish.FinishName = "Ãû×Ö";
-            Localization.Finish.Colors = {
-                White: "°×É«",
-                Red: "ºìÉ«",
-                Green: "ÂÌÉ«",
-                Blue: "À¶É«",
-                Yellow: "»ÆÉ«",
-                Purple: "×ÏÉ«"
-            };
-
-            // All Done
-            GoNorth.DefaultNodeShapes.Localization.TypeNames["aika.AllDone"] = "Íê³É";
-
-        }(Aika.Localization = Aika.Localization || {}));
-    }(GoNorth.Aika = GoNorth.Aika || {}));
-}(window.GoNorth = window.GoNorth || {}));
-(function(GoNorth) {
-    "use strict";
-    (function(Aika) {
-        (function(Localization) {
-
             // Chapter
-            GoNorth.DefaultNodeShapes.Localization.TypeNames["aika.Chapter"] = "ÕÂ½Ú";
+            GoNorth.DefaultNodeShapes.Localization.TypeNames["aika.Chapter"] = "ï¿½Â½ï¿½";
 
             Localization.Chapter = {};
-            Localization.Chapter.ChapterName = "ÕÂ½ÚÃû";
-            Localization.Chapter.ChapterNumber = "ÕÂ½Ú±àºÅ";
-            Localization.Chapter.OpenDetailView = "ÏêÇéÊÓÍ¼";
+            Localization.Chapter.ChapterName = "ï¿½Â½ï¿½ï¿½ï¿½";
+            Localization.Chapter.ChapterNumber = "ï¿½Â½Ú±ï¿½ï¿½";
+            Localization.Chapter.OpenDetailView = "ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Í¼";
 
         }(Aika.Localization = Aika.Localization || {}));
     }(GoNorth.Aika = GoNorth.Aika || {}));
@@ -49,20 +21,20 @@
 
             // ViewModel
             Localization.ViewModel = {};
-            Localization.ViewModel.ChooseQuest = "Ñ¡Ôñ¹Ø¿¨";
-            Localization.ViewModel.ChooseChapterDetail = "Ñ¡ÔñÏêÇéÊÓÍ¼";
+            Localization.ViewModel.ChooseQuest = "Ñ¡ï¿½ï¿½Ø¿ï¿½";
+            Localization.ViewModel.ChooseChapterDetail = "Ñ¡ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Í¼";
 
             // Quest
-            GoNorth.DefaultNodeShapes.Localization.TypeNames["aika.Quest"] = "¹Ø¿¨";
+            GoNorth.DefaultNodeShapes.Localization.TypeNames["aika.Quest"] = "ï¿½Ø¿ï¿½";
 
             Localization.QuestNode = {};
-            Localization.QuestNode.IsMainQuestTooltip = "Ö÷Òª¹Ø¿¨";
+            Localization.QuestNode.IsMainQuestTooltip = "ï¿½ï¿½ï¿½ß¹Ø¿ï¿½";
 
             // Chapter Detail
-            GoNorth.DefaultNodeShapes.Localization.TypeNames["aika.ChapterDetail"] = "ÏêÇéÊÓÍ¼";
+            GoNorth.DefaultNodeShapes.Localization.TypeNames["aika.ChapterDetail"] = "Ï¸ï¿½ï¿½ï¿½ï¿½Í¼";
 
             Localization.ChapterDetail = {};
-            Localization.ChapterDetail.DetailName = "Ãû×Ö";
+            Localization.ChapterDetail.DetailName = "ï¿½ï¿½ï¿½ï¿½";
 
         }(Aika.Localization = Aika.Localization || {}));
     }(GoNorth.Aika = GoNorth.Aika || {}));
@@ -74,40 +46,40 @@
 
             // View Model
             Localization.QuestViewModel = {};
-            Localization.QuestViewModel.ChooseQuest = "Ñ¡Ôñ¹Ø¿¨";
-            Localization.QuestViewModel.ChooseNpc = "Ñ¡ÔñNPC";
-            Localization.QuestViewModel.ChooseSkill = "Ñ¡Ôñ¼¼ÄÜ";
+            Localization.QuestViewModel.ChooseQuest = "Ñ¡ï¿½ï¿½Ø¿ï¿½";
+            Localization.QuestViewModel.ChooseNpc = "Ñ¡ï¿½ï¿½ npc";
+            Localization.QuestViewModel.ChooseSkill = "Ñ¡ï¿½ï¿½ï¿½ï¿½";
 
             // Quest Text Node
-            GoNorth.DefaultNodeShapes.Localization.TypeNames["aika.Text"] = "ÎÄ±¾";
+            GoNorth.DefaultNodeShapes.Localization.TypeNames["aika.Text"] = "ï¿½Ä±ï¿½";
             
             Localization.TextNode = {};
-            Localization.TextNode.Text = "ÎÄ±¾";
+            Localization.TextNode.Text = "ï¿½Ä±ï¿½";
 
             // Conditions
             Localization.Conditions = {};
 
-            Localization.Conditions.CheckCurrentQuestValueLabel = "¼ì²éµ±Ç°¹Ø¿¨Öµ";
-            Localization.Conditions.CurrentQuestLabel = "µ±Ç°¹Ø¿¨";
+            Localization.Conditions.CheckCurrentQuestValueLabel = "ï¿½ï¿½éµ±Ç°ï¿½Ø¿ï¿½Öµ";
+            Localization.Conditions.CurrentQuestLabel = "ï¿½ï¿½Ç°ï¿½Ø¿ï¿½";
 
-            Localization.Conditions.CheckQuestMarkerDistanceLabel = "¼ì²éÍæ¼Òµ½¹Ø¿¨±ê¼Ç¾àÀë";
-            Localization.Conditions.MarkerDistance = "¾àÀë";
-            Localization.Conditions.MarkerDistanceCloserThan = "½üÓÚ";
-            Localization.Conditions.MarkerDistanceMoreFarThan = "Ô¶ÓÚ";
-            Localization.Conditions.MarkerWasDeleted = "±ê¼ÇÒÑ±»É¾³ý.";
+            Localization.Conditions.CheckQuestMarkerDistanceLabel = "ï¿½ï¿½ï¿½ï¿½ï¿½Òµï¿½ï¿½Ø¿ï¿½ï¿½ï¿½Ç¾ï¿½ï¿½ï¿½";
+            Localization.Conditions.MarkerDistance = "ï¿½ï¿½ï¿½ï¿½";
+            Localization.Conditions.MarkerDistanceCloserThan = "ï¿½ï¿½ï¿½ï¿½";
+            Localization.Conditions.MarkerDistanceMoreFarThan = "Ô¶ï¿½ï¿½";
+            Localization.Conditions.MarkerWasDeleted = "ï¿½ï¿½ï¿½ï¿½Ñ±ï¿½É¾ï¿½ï¿½.";
 
             // Actions
             Localization.Actions = {};
 
-            Localization.Actions.ChangeCurrentQuestValueLabel = "¸ü¸Äµ±Ç°¹Ø¿¨Öµ";
+            Localization.Actions.ChangeCurrentQuestValueLabel = "ï¿½Ä±äµ±Ç°ï¿½Ø¿ï¿½Öµ";
 
-            Localization.Actions.NpcDialogCheckMissingPermissions = "ÄúÈ±ÉÙ¶ÔÊý¾Ý½øÐÐ¼ì²éµÄÈ¨ÏÞ";
-            Localization.Actions.ChooseNpcLabel = "<Ñ¡Ôñ NPC>";
-            Localization.Actions.OpenDialogTooltip = "´ò¿ªÒÑÑ¡¶Ô»°";
-            Localization.Actions.ChangeQuestStateInNpcDialogActionLabel = "¹Ø¿¨×´Ì¬½«±» NPC ¶Ô»°¸Ä±ä";
-            Localization.Actions.ChangeQuestStateDialogValidationFailed = "¹Ø¿¨×´Ì¬Ã»ÓÐ¸Ä±äµ½Ñ¡ÔñµÄ×´Ì¬ÔÚ¶Ô»°ÖÐ, Çë¼ì²é¶Ô»°.";
-            Localization.Actions.ChangeQuestTextInNpcDialogActionLabel = "¹Ø¿¨ÎÄ±¾½«±» NPC ¶Ô»°¸Ä±ä";
-            Localization.Actions.ChangeQuestTextDialogValidationFailed = "¹Ø¿¨ÎÄ±¾Ã»ÓÐ±»Ñ¡ÔñµÄ¶Ô»°¸Ä±ä,Çë¼ì²é¶Ô»°.";
+            Localization.Actions.NpcDialogCheckMissingPermissions = "ï¿½ï¿½È±ï¿½Ù¶ï¿½ï¿½ï¿½ï¿½Ý½ï¿½ï¿½Ð¼ï¿½ï¿½ï¿½È¨ï¿½ï¿½";
+            Localization.Actions.ChooseNpcLabel = "<Ñ¡ï¿½ï¿½ NPC>";
+            Localization.Actions.OpenDialogTooltip = "ï¿½ï¿½ï¿½ï¿½Ñ¡ï¿½Ô»ï¿½";
+            Localization.Actions.ChangeQuestStateInNpcDialogActionLabel = "ï¿½Ø¿ï¿½×´Ì¬ï¿½ï¿½ï¿½ï¿½ NPC ï¿½Ô»ï¿½ï¿½Ä±ï¿½";
+            Localization.Actions.ChangeQuestStateDialogValidationFailed = "ï¿½Ø¿ï¿½×´Ì¬Ã»ï¿½Ð¸Ä±äµ½Ñ¡ï¿½ï¿½ï¿½×´Ì¬ï¿½Ú¶Ô»ï¿½ï¿½ï¿½, ï¿½ï¿½ï¿½ï¿½Ô»ï¿½.";
+            Localization.Actions.ChangeQuestTextInNpcDialogActionLabel = "ï¿½Ø¿ï¿½ï¿½Ä±ï¿½ï¿½ï¿½ï¿½ï¿½ NPC ï¿½Ô»ï¿½ï¿½Ä±ï¿½";
+            Localization.Actions.ChangeQuestTextDialogValidationFailed = "ï¿½Ø¿ï¿½ï¿½Ä±ï¿½Ã»ï¿½Ð±ï¿½Ñ¡ï¿½ï¿½Ä¶Ô»ï¿½ï¿½Ä±ï¿½,ï¿½ï¿½ï¿½ï¿½Ô»ï¿½.";
 
         }(Aika.Localization = Aika.Localization || {}));
     }(GoNorth.Aika = GoNorth.Aika || {}));

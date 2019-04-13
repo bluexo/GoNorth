@@ -24,6 +24,7 @@ namespace GoNorth
                .AddCommandLine(args)
                .Build();
 
+            NPOI.XSSF.UserModel.XSSFWorkbook xSSFWorkbook;
             var host = new WebHostBuilder()
                 .UseConfiguration(config)
                 .ConfigureLogging(builder => builder.AddFile())

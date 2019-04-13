@@ -5,26 +5,26 @@
 
             // View Model
             Localization.SkillViewModel = {};
-            Localization.SkillViewModel.ChooseQuest = "Ñ¡Ôñ¹Ø¿¨";
-            Localization.SkillViewModel.ChooseNpc = "Ñ¡Ôñ NPC";
+            Localization.SkillViewModel.ChooseQuest = "Ñ¡ï¿½ï¿½Ø¿ï¿½";
+            Localization.SkillViewModel.ChooseNpc = "Ñ¡ï¿½ï¿½ NPC";
 
             // Evne Text Node
-            GoNorth.DefaultNodeShapes.Localization.TypeNames["evne.Text"] = "ÎÄ±¾";
+            GoNorth.DefaultNodeShapes.Localization.TypeNames["evne.Text"] = "ï¿½Ä±ï¿½";
             
             Localization.TextNode = {};
-            Localization.TextNode.Text = "ÎÄ±¾";
+            Localization.TextNode.Text = "ï¿½Ä±ï¿½";
 
             // Action
             Localization.Actions = {};
 
-            Localization.Actions.ChangeCurrentSkillValueLabel = "¸Ä±ä¼¼ÄÜµã";
+            Localization.Actions.ChangeCurrentSkillValueLabel = "ï¿½Ä±ä¼¼ï¿½Üµï¿½";
 
-            Localization.Actions.SetTargetNpcStateLabel = "¸Ä±äÄ¿±êNPC×´Ì¬";
+            Localization.Actions.SetTargetNpcStateLabel = "ï¿½Ä±ï¿½Ä¿ï¿½ï¿½ NPC ×´Ì¬";
 
             // Condition
             Localization.Conditions = {};
-            Localization.Conditions.CheckSkillValueLabel = "Ñ¡Ôñ¼¼ÄÜµã";
-            Localization.Conditions.SkillLabel = "¼¼ÄÜ";
+            Localization.Conditions.CheckSkillValueLabel = "ï¿½ï¿½é¼¼ï¿½Üµï¿½";
+            Localization.Conditions.SkillLabel = "ï¿½ï¿½ï¿½ï¿½";
 
         }(Evne.Localization = Evne.Localization || {}));
     }(GoNorth.Evne = GoNorth.Evne || {}));
