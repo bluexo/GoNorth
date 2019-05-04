@@ -1,1 +1,0 @@
-BaseNpc_OpenShop(this){{Tale_ChildNode_HasFunction_Start}}

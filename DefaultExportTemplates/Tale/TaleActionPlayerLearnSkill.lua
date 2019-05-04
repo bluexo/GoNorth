@@ -1,1 +1,0 @@
-BaseNpc_LearnSkill(playerNpc, "{{Tale_Action_Skill_Value_ScriptName}}")

@@ -1,1 +1,0 @@
-BaseDialog_AddQuestText({{Tale_Action_Quest_Value_Id}}, "{{Tale_Action_QuestText_LangKey}}") -- {{Tale_Action_QuestText_Preview}}

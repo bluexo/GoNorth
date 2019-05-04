@@ -1,1 +1,0 @@
-BaseNpc_FindSkill(playerNpc, "{{Tale_Condition_Skill_Value_ScriptName}}") ~= nil
