@@ -1,0 +1,10 @@
+{
+    "AddField": "Feld hinzufügen",
+
+    "SingleLineField": "Textfeld",
+    "MultiLineField": "Mehrzeiliges Textfeld",
+    "NumberField": "Zahlenfeld",
+    "OptionField": "Auswahlfeld",
+
+    "FieldGroup": "Feldgruppe"
+}

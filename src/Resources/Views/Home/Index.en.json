@@ -1,0 +1,32 @@
+{
+    "HomePage": "Home page",
+
+    "WelcomeToProject": "Welcome to project",
+
+    "Tasks": "Tasks",
+    "TaskManagement": "Task management",
+
+    "Aika": "Aika",
+    "AikaQuestDatabase": "Quest database",
+
+    "Kortisto": "Kortisto",
+    "KortistoNpcDatabase": "Npc database",
+    
+    "Styr": "Styr",
+    "StyrItemDatabase": "Item database",
+
+    "Evne": "Evne",
+    "EvneSkillDatabase": "Skill database",
+
+    "Kirja": "Kirja",
+    "KirjaWiki": "Wiki component",
+
+    "Karta": "Karta",
+    "KartaMap": "Map component",
+
+    "ImplementationStatus": "Implementation",
+    "TrackCurrentImplementationProgress": "Current implementation progress",
+
+    "ExportSettings": "Export",
+    "ManageExportSettings": "Manage export settings"
+}

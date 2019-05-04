@@ -1,0 +1,70 @@
+{
+    "Tasks": "Aufgaben",
+
+    "StartingFrom": "Ab",
+
+    "CreateTaskGroup": "Aufgabengruppe erstellen",
+    "CreateTaskToolTip": "Aufgabe erstellen",
+
+    "NoOpenBoards": "Es existiert kein offenes Aufgabenboard.",
+    "ClickHereManageBoards": "Hier klicken",
+    "ClickHereManageBoardsPostfix": " um ein neues Aufgabenboard anzulegen oder ein altes erneut zu öffnen.",
+    "SelectTaskBoard": "Bitte wähle ein Board aus um eine neue Aufgabengruppe anzulegen",
+
+    "SwitchBoard": "Aufgabenboard wechseln",
+    "ManageBoards": "Aufgabenboards verwalten",
+    "ManageTaskTypes": "Aufgaben Typen verwalten",
+
+    "InsertKirjaLink": "Link zu Kirja Seite einfügen",
+    "InsertAikaQuestLink": "Link zu Quest einfügen",
+    "InsertKortistoNpcLink": "Link zu Npc einfügen",
+    "InsertStyrItemLink": "Link zu Item einfügen",
+
+    "DialogTaskNumberPrefix": "(#",
+    "DialogTaskNumberPostfix": ")",
+    "NewTaskGroup": "Neue Aufgabengruppe",
+    "EditTaskGroup": "Aufgabengruppe editieren",
+    "NewTask": "Neue Aufgabe",
+    "EditTask": "Aufgabe editieren",
+    "TaskType": "Typ",
+    "Name": "Name",
+    "Description": "Beschreibung",
+    "PressCtrlToOpenLinks": "Strg um Links zu öffnen",
+    "AssignedTo": "Zugewiesen an",
+    "Delete": "Löschen",
+    "MoveToOtherBoard": "Zu Board verschieben",
+    "Save": "Speichern",
+    "Cancel": "Abbrechen",
+
+    "AreYouSure": "Bist du sicher?",
+    "AreYouSureYouWantToDeleteTheTaskGroup": "Bist du sicher das die Aufgabengruppe gelöscht werden soll?",
+    "AreYouSureYouWantToDeleteTheTask": "Bist du sicher das die Aufgabe gelöscht werden soll?",
+    "Yes": "Ja",
+    "No": "Nein",
+
+    "SelectTarget": "Ziel auswählen",
+    "TargetBoard": "Ziel Board",
+    "TargetTaskGroup": "Ziel Aufgabengruppe",
+    "Choose": "Auswählen...",
+    "Move": "Verschieben",
+
+    "Unassigned": "Nicht zugewiesen",
+
+    "TasksSingle": "Aufgabe",
+    "TasksMulti": "Aufgaben",
+
+    "TaskStatusOpen": "Offen",
+    "TaskStatusInProgress": "In Arbeit",
+    "TaskStatusDone": "Erledigt",
+
+    "Error": "Fehler:",
+    "ErrorOccured": "Es ist ein Fehler aufgetreten.",
+
+    "Locked": "Gesperrt",
+    "LockedTaskGroupPrefix": "Diese Aufgabengruppe wird gerade von ",
+    "LockedTaskPrefix": "Diese Aufgabe wird gerade von ",
+    "LockedPostfix": " bearbeitet.",
+    "BoardIsClosed": "Board ist bereits geschlossen.",
+
+    "RichTextLocale": "de"
+}

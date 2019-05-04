@@ -1,0 +1,3416 @@
+(function(GoNorth) {
+    "use strict";
+    (function(ChooseObjectDialog) {
+
+        /// Dialog Page Size
+        var dialogPageSize = 15;
+
+        /**
+         * Page View Model
+         * @class
+         */
+        ChooseObjectDialog.ViewModel = function()
+        {
+            this.showDialog = new ko.observable(false);
+            this.dialogTitle = new ko.observable("");
+            this.showNewButtonInDialog = new ko.observable(false);
+            this.dialogSearchCallback = null;
+            this.dialogCreateNewCallback = null;
+            this.dialogSearchPattern = new ko.observable("");
+            this.dialogIsLoading = new ko.observable(false);
+            this.dialogEntries = new ko.observableArray();
+            this.dialogHasMore = new ko.observable(false);
+            this.dialogCurrentPage = new ko.observable(0);
+            this.errorOccured = new ko.observable(false);
+            this.idObservable = null;
+
+            this.choosingDeferred = null;
+        };
+
+        ChooseObjectDialog.ViewModel.prototype = {
+            /**
+             * Opens the dialog to search for npcs
+             * 
+             * @param {string} dialogTitle Title of the dialog
+             * @param {function} createCallback Optional callback that will get triggered on hitting the new button, if none is provided the button will be hidden
+             * @returns {jQuery.Deferred} Deferred for the selecting process
+             */
+            openNpcSearch: function(dialogTitle, createCallback) {
+                return this.openDialog(dialogTitle, this.searchNpcs, createCallback, null);
+            },
+
+            /**
+             * Opens the dialog to search for items
+             * 
+             * @param {string} dialogTitle Title of the dialog
+             * @param {function} createCallback Optional callback that will get triggered on hitting the new button, if none is provided the button will be hidden
+             * @returns {jQuery.Deferred} Deferred for the selecting process
+             */
+            openItemSearch: function(dialogTitle, createCallback) {
+                return this.openDialog(dialogTitle, this.searchItems, createCallback, null);
+            },
+
+            /**
+             * Opens the dialog to search for skills
+             * 
+             * @param {string} dialogTitle Title of the dialog
+             * @param {function} createCallback Optional callback that will get triggered on hitting the new button, if none is provided the button will be hidden
+             * @returns {jQuery.Deferred} Deferred for the selecting process
+             */
+            openSkillSearch: function(dialogTitle, createCallback) {
+                return this.openDialog(dialogTitle, this.searchSkills, createCallback, null);
+            },
+
+            /**
+             * Opens the dialog to search for kirja pages
+             * 
+             * @param {string} dialogTitle Title of the dialog
+             * @param {function} createCallback Optional callback that will get triggered on hitting the new button, if none is provided the button will be hidden
+             * @param {ko.observable} idObservable Optional id observable which will be used to exclude the current object from the search
+             * @returns {jQuery.Deferred} Deferred for the selecting process
+             */
+            openKirjaPageSearch: function(dialogTitle, createCallback, idObservable) {
+                return this.openDialog(dialogTitle, this.searchPages, createCallback, idObservable);
+            },
+
+            /**
+             * Opens the dialog to search for quests
+             * 
+             * @param {string} dialogTitle Title of the dialog
+             * @param {function} createCallback Optional callback that will get triggered on hitting the new button, if none is provided the button will be hidden
+             * @returns {jQuery.Deferred} Deferred for the selecting process
+             */
+            openQuestSearch: function(dialogTitle, createCallback) {
+                return this.openDialog(dialogTitle, this.searchQuest, createCallback, null);
+            },
+
+            /**
+             * Opens the dialog to search for chapter details
+             * 
+             * @param {string} dialogTitle Title of the dialog
+             * @param {function} createCallback Optional callback that will get triggered on hitting the new button, if none is provided the button will be hidden
+             * @param {ko.observable} idObservable Optional id observable which will be used to exclude the current object from the search
+             * @returns {jQuery.Deferred} Deferred for the selecting process
+             */
+            openChapterDetailSearch: function(dialogTitle, createCallback, idObservable) {
+                return this.openDialog(dialogTitle, this.searchChapterDetails, createCallback, idObservable);
+            },
+
+            /**
+             * Opens the dialog
+             * 
+             * @param {string} dialogTitle Title of the dialog
+             * @param {function} searchCallback Function that gets called on starting a search
+             * @param {function} createCallback Function that gets called on hitting t he new button
+             * @param {ko.observable} idObservable Optional id observable which will be used to exclude the current object from the search
+             * @returns {jQuery.Deferred} Deferred for the selecting process
+             */
+            openDialog: function(dialogTitle, searchCallback, createCallback, idObservable) {
+                if(this.choosingDeferred)
+                {
+                    this.choosingDeferred.reject();
+                    this.choosingDeferred = null;
+                }
+
+                this.showDialog(true);
+                this.dialogTitle(dialogTitle);
+                this.dialogCreateNewCallback = typeof createCallback == "function" ? createCallback : null;
+                this.showNewButtonInDialog(this.dialogCreateNewCallback ? true : false);
+                this.dialogSearchCallback = searchCallback;
+                this.dialogSearchPattern("");
+                this.dialogIsLoading(false);
+                this.dialogEntries([]);
+                this.dialogHasMore(false);
+                this.dialogCurrentPage(0);
+                this.idObservable = idObservable;
+
+                this.choosingDeferred = new jQuery.Deferred();
+                return this.choosingDeferred.promise();
+            },
+
+            /**
+             * Selects an object
+             * 
+             * @param {object} selectedObject Selected object
+             */
+            selectObject: function(selectedObject) {
+                if(this.choosingDeferred)
+                {
+                    this.choosingDeferred.resolve(selectedObject);
+                    this.choosingDeferred = null;
+                }
+
+                this.closeDialog();
+            },
+
+            /**
+             * Cancels the dialog
+             */
+            cancelDialog: function() {
+                if(this.choosingDeferred)
+                {
+                    this.choosingDeferred.reject();
+                    this.choosingDeferred = null;
+                }
+
+                this.closeDialog();
+            },
+
+            /**
+             * Closes the dialog
+             */
+            closeDialog: function() {
+                this.showDialog(false);
+            },
+
+            /**
+             * Starts a new dialog search
+             */
+            startNewDialogSearch: function() {
+                this.dialogCurrentPage(0);
+                this.dialogHasMore(false);
+                this.runDialogSearch();
+            },
+
+            /**
+             * Loads the previous dialog page
+             */
+            prevDialogPage: function() {
+                this.dialogCurrentPage(this.dialogCurrentPage() - 1);
+                this.runDialogSearch();
+            },
+
+            /**
+             * Loads the previous dialog page
+             */
+            nextDialogPage: function() {
+                this.dialogCurrentPage(this.dialogCurrentPage() + 1);
+                this.runDialogSearch();
+            },
+
+            /**
+             * Runs the dialog search
+             */
+            runDialogSearch: function() {
+                this.dialogIsLoading(true);
+                this.errorOccured(false);
+                var self = this;
+                this.dialogSearchCallback(this.dialogSearchPattern()).done(function(result) {
+                    self.dialogHasMore(result.hasMore);
+                    self.dialogEntries(result.entries);
+                    self.dialogIsLoading(false);
+                }).fail(function() {
+                    self.errorOccured(true);
+                    self.dialogIsLoading(false);
+                });
+            },
+
+            /**
+             * Creates a dialog object
+             * 
+             * @param {string} name Name of the object
+             * @param {string} openLink Link to open the object
+             */
+            createDialogObject: function(id, name, openLink) {
+                return {
+                    id: id,
+                    name: name,
+                    openLink: openLink
+                };
+            },
+
+            /**
+             * Searches kirja pages
+             * 
+             * @param {string} searchPattern Search Pattern
+             * @returns {jQuery.Deferred} Deferred for the result
+             */
+            searchPages: function(searchPattern) {
+                var def = new jQuery.Deferred();
+
+                var searchUrl = "/api/KirjaApi/SearchPages?searchPattern=" + encodeURIComponent(searchPattern) + "&start=" + (this.dialogCurrentPage() * dialogPageSize) + "&pageSize=" + dialogPageSize;
+                if(this.idObservable)
+                {
+                    searchUrl += "&excludeId=" + this.idObservable();
+                }
+
+                var self = this;
+                jQuery.ajax({ 
+                    url: searchUrl, 
+                    type: "GET"
+                }).done(function(data) {
+                    var result = {
+                        hasMore: data.hasMore,
+                        entries: []
+                    };
+
+                    for(var curEntry = 0; curEntry < data.pages.length; ++curEntry)
+                    {
+                        result.entries.push(self.createDialogObject(data.pages[curEntry].id, data.pages[curEntry].name, "/Kirja?id=" + data.pages[curEntry].id));
+                    }
+
+                    def.resolve(result);
+                }).fail(function() {
+                    def.reject();
+                });
+
+                return def.promise();
+            },
+
+            /**
+             * Opens a page to create a new kirja page
+             */
+            openCreatePage: function() {
+                this.dialogCreateNewCallback();
+            },
+
+
+            /**
+             * Searches kortisto npcs
+             * 
+             * @param {string} searchPattern Search Pattern
+             * @returns {jQuery.Deferred} Deferred for the result
+             */
+            searchNpcs: function(searchPattern) {
+                var def = new jQuery.Deferred();
+                
+                var self = this;
+                jQuery.ajax({ 
+                    url: "/api/KortistoApi/SearchFlexFieldObjects?searchPattern=" + encodeURIComponent(searchPattern) + "&start=" + (this.dialogCurrentPage() * dialogPageSize) + "&pageSize=" + dialogPageSize, 
+                    type: "GET"
+                }).done(function(data) {
+                    var result = {
+                        hasMore: data.hasMore,
+                        entries: []
+                    };
+
+                    for(var curEntry = 0; curEntry < data.flexFieldObjects.length; ++curEntry)
+                    {
+                        result.entries.push(self.createDialogObject(data.flexFieldObjects[curEntry].id, data.flexFieldObjects[curEntry].name, "/Kortisto/Npc?id=" + data.flexFieldObjects[curEntry].id));
+                    }
+
+                    def.resolve(result);
+                }).fail(function(xhr) {
+                    def.reject();
+                });
+
+                return def.promise();
+            },
+
+
+            /**
+             * Searches styr items
+             * 
+             * @param {string} searchPattern Search Pattern
+             * @returns {jQuery.Deferred} Deferred for the result
+             */
+            searchItems: function(searchPattern) {
+                var def = new jQuery.Deferred();
+                
+                var self = this;
+                jQuery.ajax({ 
+                    url: "/api/StyrApi/SearchFlexFieldObjects?searchPattern=" + encodeURIComponent(searchPattern) + "&start=" + (this.dialogCurrentPage() * dialogPageSize) + "&pageSize=" + dialogPageSize, 
+                    type: "GET"
+                }).done(function(data) {
+                    var result = {
+                        hasMore: data.hasMore,
+                        entries: []
+                    };
+
+                    for(var curEntry = 0; curEntry < data.flexFieldObjects.length; ++curEntry)
+                    {
+                        result.entries.push(self.createDialogObject(data.flexFieldObjects[curEntry].id, data.flexFieldObjects[curEntry].name, "/Styr/Item?id=" + data.flexFieldObjects[curEntry].id));
+                    }
+
+                    def.resolve(result);
+                }).fail(function(xhr) {
+                    def.reject();
+                });
+
+                return def.promise();
+            },
+
+
+            /**
+             * Searches Evne skills
+             * 
+             * @param {string} searchPattern Search Pattern
+             * @returns {jQuery.Deferred} Deferred for the result
+             */
+            searchSkills: function(searchPattern) {
+                var def = new jQuery.Deferred();
+                
+                var self = this;
+                jQuery.ajax({ 
+                    url: "/api/EvneApi/SearchFlexFieldObjects?searchPattern=" + encodeURIComponent(searchPattern) + "&start=" + (this.dialogCurrentPage() * dialogPageSize) + "&pageSize=" + dialogPageSize, 
+                    type: "GET"
+                }).done(function(data) {
+                    var result = {
+                        hasMore: data.hasMore,
+                        entries: []
+                    };
+
+                    for(var curEntry = 0; curEntry < data.flexFieldObjects.length; ++curEntry)
+                    {
+                        result.entries.push(self.createDialogObject(data.flexFieldObjects[curEntry].id, data.flexFieldObjects[curEntry].name, "/Evne/Skill?id=" + data.flexFieldObjects[curEntry].id));
+                    }
+
+                    def.resolve(result);
+                }).fail(function(xhr) {
+                    def.reject();
+                });
+
+                return def.promise();
+            },
+
+
+            /**
+             * Searches aika quests
+             * 
+             * @param {string} searchPattern Search Pattern
+             * @returns {jQuery.Deferred} Deferred for the result
+             */
+            searchQuest: function(searchPattern) {
+                var def = new jQuery.Deferred();
+                
+                var self = this;
+                jQuery.ajax({ 
+                    url: "/api/AikaApi/GetQuests?searchPattern=" + encodeURIComponent(searchPattern) + "&start=" + (this.dialogCurrentPage() * dialogPageSize) + "&pageSize=" + dialogPageSize, 
+                    type: "GET"
+                }).done(function(data) {
+                    var result = {
+                        hasMore: data.hasMore,
+                        entries: []
+                    };
+
+                    for(var curEntry = 0; curEntry < data.quests.length; ++curEntry)
+                    {
+                        result.entries.push(self.createDialogObject(data.quests[curEntry].id, data.quests[curEntry].name, "/Aika/Quest?id=" + data.quests[curEntry].id));
+                    }
+
+                    def.resolve(result);
+                }).fail(function(xhr) {
+                    def.reject();
+                });
+
+                return def.promise();
+            },
+
+            /**
+             * Searches aika chapter details
+             * 
+             * @param {string} searchPattern Search Pattern
+             * @returns {jQuery.Deferred} Deferred for the result
+             */
+            searchChapterDetails: function(searchPattern) {
+                var def = new jQuery.Deferred();
+                
+                var self = this;
+                jQuery.ajax({ 
+                    url: "/api/AikaApi/GetChapterDetails?searchPattern=" + encodeURIComponent(searchPattern) + "&start=" + (this.dialogCurrentPage() * dialogPageSize) + "&pageSize=" + dialogPageSize, 
+                    type: "GET"
+                }).done(function(data) {
+                    var result = {
+                        hasMore: data.hasMore,
+                        entries: []
+                    };
+
+                    for(var curEntry = 0; curEntry < data.details.length; ++curEntry)
+                    {
+                        if(self.idObservable && self.idObservable() == data.details[curEntry].id)
+                        {
+                            continue;
+                        }
+
+                        result.entries.push(self.createDialogObject(data.details[curEntry].id, data.details[curEntry].name, "/Aika/Detail?id=" + data.details[curEntry].id));
+                    }
+
+                    def.resolve(result);
+                }).fail(function(xhr) {
+                    def.reject();
+                });
+
+                return def.promise();
+            }
+            
+        };
+
+    }(GoNorth.ChooseObjectDialog = GoNorth.ChooseObjectDialog || {}));
+}(window.GoNorth = window.GoNorth || {}));
+(function(GoNorth) {
+    "use strict";
+    (function(ImplementationStatus) {
+        (function(CompareDialog) {
+
+            /**
+             * Compare Dialog View Model
+             * @class
+             */
+            CompareDialog.ViewModel = function()
+            {
+                this.isOpen = new ko.observable(false);
+                var self = this;
+                this.isOpen.subscribe(function(newValue) {
+                    if(!newValue && self.markAsImplementedPromise)
+                    {
+                        self.markAsImplementedPromise.reject();
+                    }
+                });
+                this.objectName = new ko.observable("");
+
+                this.isLoading = new ko.observable(false);
+                this.errorOccured = new ko.observable(false);
+
+                this.markAsImplementedPromise = null;
+                this.flagAsImplementedMethodUrlPostfix = null;
+
+                this.doesSnapshotExists = new ko.observable(false);
+                this.difference = new ko.observableArray();
+            };
+
+            CompareDialog.ViewModel.prototype = {
+                /**
+                 * Opens the compare dialog for an npc compare call
+                 * 
+                 * @param {string} id Id of the npc
+                 * @param {string} npcName Name of the npc to display in the title
+                 * @returns {jQuery.Deferred} Deferred that will get resolved after the object was marked as implemented
+                 */
+                openNpcCompare: function(id, npcName) {
+                    this.isOpen(true);
+                    this.objectName(npcName ? npcName : "");
+                    this.flagAsImplementedMethodUrlPostfix = "FlagNpcAsImplemented?npcId=" + id;
+
+                    return this.loadCompareResult("CompareNpc?npcId=" + id);
+                },
+
+                /**
+                 * Opens the compare dialog for an item compare call
+                 * 
+                 * @param {string} id Id of the item
+                 * @param {string} itemName Name of the item to display in the title
+                 * @returns {jQuery.Deferred} Deferred that will get resolved after the object was marked as implemented
+                 */
+                openItemCompare: function(id, itemName) {
+                    this.isOpen(true);
+                    this.objectName(itemName ? itemName : "");
+                    this.flagAsImplementedMethodUrlPostfix = "FlagItemAsImplemented?itemId=" + id;
+
+                    return this.loadCompareResult("CompareItem?itemId=" + id);
+                },
+
+                /**
+                 * Opens the compare dialog for a skill compare call
+                 * 
+                 * @param {string} id Id of the skill
+                 * @param {string} skillName Name of the skill to display in the title
+                 * @returns {jQuery.Deferred} Deferred that will get resolved after the object was marked as implemented
+                 */
+                openSkillCompare: function(id, skillName) {
+                    this.isOpen(true);
+                    this.objectName(skillName ? skillName : "");
+                    this.flagAsImplementedMethodUrlPostfix = "FlagSkillAsImplemented?skillId=" + id;
+
+                    return this.loadCompareResult("CompareSkill?skillId=" + id);
+                },
+
+                /**
+                 * Opens the compare dialog for a dialog compare call
+                 * 
+                 * @param {string} id Id of the dialog
+                 * @param {string} dialogName Name of the dialog to display in the title
+                 * @returns {jQuery.Deferred} Deferred that will get resolved after the object was marked as implemented
+                 */
+                openDialogCompare: function(id, dialogName) {
+                    this.isOpen(true);
+                    this.objectName(dialogName ? dialogName : "");
+                    this.flagAsImplementedMethodUrlPostfix = "FlagDialogAsImplemented?dialogId=" + id;
+
+                    return this.loadCompareResult("CompareDialog?dialogId=" + id);
+                },
+
+                /**
+                 * Opens the compare dialog for a quest compare call
+                 * 
+                 * @param {string} id Id of the quest
+                 * @param {string} questName Name of the quest to display in the title
+                 * @returns {jQuery.Deferred} Deferred that will get resolved after the object was marked as implemented
+                 */
+                openQuestCompare: function(id, questName) {
+                    this.isOpen(true);
+                    this.objectName(questName ? questName : "");
+                    this.flagAsImplementedMethodUrlPostfix = "FlagQuestAsImplemented?questId=" + id;
+
+                    return this.loadCompareResult("CompareQuest?questId=" + id);
+                },
+                
+                /**
+                 * Opens the compare dialog for a marker compare call
+                 * 
+                 * @param {string} mapId Id of the map
+                 * @param {string} markerId Id of the marker
+                 * @param {string} markerType Type of the marker
+                 * @returns {jQuery.Deferred} Deferred that will get resolved after the object was marked as implemented
+                 */
+                openMarkerCompare: function(mapId, markerId, markerType) {
+                    this.isOpen(true);
+                    this.objectName("");
+                    this.flagAsImplementedMethodUrlPostfix = "FlagMarkerAsImplemented?mapId=" + mapId + "&markerId=" + markerId + "&markerType=" + markerType;
+
+                    return this.loadCompareResult("CompareMarker?mapId=" + mapId + "&markerId=" + markerId + "&markerType=" + markerType);
+                },
+
+
+                /**
+                 * Loads a compare result
+                 * 
+                 * @param {string} urlPostfix Postfix for the url
+                 */
+                loadCompareResult: function(urlPostfix) {
+                    this.isLoading(true);
+                    this.errorOccured(false);
+                    this.difference([]);
+                    var self = this;
+                    jQuery.ajax({ 
+                        url: "/api/ImplementationStatusApi/" + urlPostfix, 
+                        type: "GET"
+                    }).done(function(compareResult) {
+                        self.isLoading(false);
+                        self.addExpandedObservable(compareResult.compareDifference);
+                        self.doesSnapshotExists(compareResult.doesSnapshotExist);
+                        if(compareResult.compareDifference)
+                        {
+                            self.difference(compareResult.compareDifference);
+                        }
+                    }).fail(function() {
+                        self.isLoading(false);
+                        self.errorOccured(true);
+                    });
+
+                    this.markAsImplementedPromise = new jQuery.Deferred();
+                    return this.markAsImplementedPromise.promise();
+                },
+
+                /**
+                 * Adds the expanded observable to all compare results
+                 * 
+                 * @param {object[]} compareResults Compare REsults to which the expanded observable must be added
+                 */
+                addExpandedObservable: function(compareResults) {
+                    if(!compareResults)
+                    {
+                        return;
+                    }
+
+                    for(var curResult = 0; curResult < compareResults.length; ++curResult)
+                    {
+                        compareResults[curResult].isExpanded = new ko.observable(true);
+                        this.addExpandedObservable(compareResults[curResult].subDifferences);
+                    }
+                },
+
+                /**
+                 * Toggles a compare result to be epanded or not
+                 * 
+                 * @param {object} compareResult Compare Result
+                 */
+                toggleCompareResultExpanded: function(compareResult) {
+                    compareResult.isExpanded(!compareResult.isExpanded());
+                },
+
+
+                /**
+                 * Marks the object for which the dialog is opened as implemented
+                 */
+                markAsImplemented: function() {
+                    this.isLoading(true);
+                    this.errorOccured(false);
+                    var self = this;
+                    jQuery.ajax({ 
+                        url: "/api/ImplementationStatusApi/" + this.flagAsImplementedMethodUrlPostfix, 
+                        headers: GoNorth.Util.generateAntiForgeryHeader(),
+                        type: "POST"
+                    }).done(function() {
+                        if(window.refreshImplementationStatusList)
+                        {
+                            window.refreshImplementationStatusList();
+                        }
+
+                        self.markAsImplementedPromise.resolve();
+                        self.markAsImplementedPromise = null;
+
+                        self.isLoading(false);
+                        self.isOpen(false);
+                    }).fail(function() {
+                        self.isLoading(false);
+                        self.errorOccured(true);
+                    });
+                },
+
+                /**
+                 * Closes the dialog
+                 */
+                closeDialog: function() {
+                    this.isOpen(false);
+                }
+            };
+
+        }(ImplementationStatus.CompareDialog = ImplementationStatus.CompareDialog || {}));
+    }(GoNorth.ImplementationStatus = GoNorth.ImplementationStatus || {}));
+}(window.GoNorth = window.GoNorth || {}));
+(function(GoNorth) {
+    "use strict";
+    (function(FlexFieldDatabase) {
+        (function(ObjectForm) {
+
+            /// Seperator for the additional name field values
+            ObjectForm.FlexFieldScriptSettingsAdditionalScriptNameSeperator = ",";
+
+            /**
+             * Class for a flex field script settings
+             * 
+             * @class
+             */
+            ObjectForm.FlexFieldScriptSettings = function() {
+                this.dontExportToScript = false;
+                this.additionalScriptNames = "";
+            }
+
+            ObjectForm.FlexFieldScriptSettings.prototype = {
+                /**
+                 * Serializes the values to an object
+                 * 
+                 * @returns {object} Object to deserialize
+                 */
+                serialize: function() {
+                    return {
+                        dontExportToScript: this.dontExportToScript,
+                        additionalScriptNames: this.additionalScriptNames
+                    };
+                },
+
+                /**
+                 * Deserialize the values from a serialized entry
+                 * @param {object} serializedValue Serialized entry
+                 */
+                deserialize: function(serializedValue) {
+                    this.dontExportToScript = serializedValue.dontExportToScript;
+                    this.additionalScriptNames = serializedValue.additionalScriptNames;
+                }
+            }
+
+        }(FlexFieldDatabase.ObjectForm = FlexFieldDatabase.ObjectForm || {}));
+    }(GoNorth.FlexFieldDatabase = GoNorth.FlexFieldDatabase || {}));
+}(window.GoNorth = window.GoNorth || {}));
+(function(GoNorth) {
+    "use strict";
+    (function(FlexFieldDatabase) {
+        (function(ObjectForm) {
+
+            /**
+             * Interface for flex field fields
+             * 
+             * @class
+             */
+            ObjectForm.FlexFieldBase = function() {
+                this.id = new ko.observable("");
+                this.createdFromTemplate = new ko.observable(false);
+                this.name = new ko.observable();
+                this.scriptSettings = new ObjectForm.FlexFieldScriptSettings();
+            }
+
+            ObjectForm.FlexFieldBase.prototype = {
+                /**
+                 * Returns the type of the field
+                 * 
+                 * @returns {int} Type of the field
+                 */
+                getType: function() { },
+
+                /**
+                 * Returns the template name
+                 * 
+                 * @returns {string} Template Name
+                 */
+                getTemplateName: function() { },
+
+                /**
+                 * Returns if the field can be exported to a script
+                 * 
+                 * @returns {bool} true if the value can be exported to a script, else false
+                 */
+                canExportToScript: function() { },
+
+                /**
+                 * Serializes the value to a string
+                 * 
+                 * @param {number} fieldIndex Index of the field in the final serialization
+                 * @returns {string} Value of the field as a string
+                 */
+                serializeValue: function(fieldIndex) { },
+
+                /**
+                 * Deserializes a value from a string
+                 * 
+                 * @param {string} value Value to Deserialize
+                 */
+                deserializeValue: function(value) { },
+
+                /**
+                 * Returns all child fields
+                 * 
+                 * @returns {FlexFieldBase[]} Children of the field, null if no children exist
+                 */
+                getChildFields: function() { return null; },
+
+                /**
+                 * Returns true if the field has additional configuration, else false
+                 * 
+                 * @returns {bool} true if the field has additional configuration, else false
+                 */
+                hasAdditionalConfiguration: function() { return false; },
+
+                /**
+                 * Returns the label for additional configuration
+                 * 
+                 * @returns {string} Additional Configuration
+                 */
+                getAdditionalConfigurationLabel: function() { return ""; },
+
+                /**
+                 * Returns true if the additional configuration can be edited for fields that were created based on template fields, else false
+                 * 
+                 * @returns {bool} true if the additional configuration can be edited for fields that were created based on template fields, else false
+                 */
+                allowEditingAdditionalConfigForTemplateFields: function() { return false; },
+
+                /**
+                 * Sets additional configuration
+                 * 
+                 * @param {string} configuration Additional Configuration
+                 */
+                setAdditionalConfiguration: function(configuration) { },
+
+                /**
+                 * Returns additional configuration
+                 * 
+                 * @returns {string} Additional Configuration
+                 */
+                getAdditionalConfiguration: function() { return ""; },
+
+                /**
+                 * Serializes the additional configuration
+                 * 
+                 * @returns {string} Serialized additional configuration
+                 */
+                serializeAdditionalConfiguration: function() { return ""; },
+
+                /**
+                 * Deserializes the additional configuration
+                 * 
+                 * @param {string} additionalConfiguration Serialized additional configuration
+                 */
+                deserializeAdditionalConfiguration: function(additionalConfiguration) { },
+
+
+                /**
+                 * Groups fields into the field
+                 * 
+                 * @param {FlexFieldBase[]} fields Root List of fields
+                 * @param {object} fieldsToRemoveFromRootList Object to track fields that must be removed from the root list
+                 */
+                groupFields: function(fields, fieldsToRemoveFromRootList) { }
+            }
+
+        }(FlexFieldDatabase.ObjectForm = FlexFieldDatabase.ObjectForm || {}));
+    }(GoNorth.FlexFieldDatabase = GoNorth.FlexFieldDatabase || {}));
+}(window.GoNorth = window.GoNorth || {}));
+(function(GoNorth) {
+    "use strict";
+    (function(FlexFieldDatabase) {
+        (function(ObjectForm) {
+
+            /**
+             * Type of the single text line field
+             */
+            ObjectForm.FlexFieldTypeSingleLine = 0;
+
+            /**
+             * Class for a single text line field
+             * 
+             * @class
+             */
+            ObjectForm.SingleLineFlexField = function() {
+                ObjectForm.FlexFieldBase.apply(this);
+
+                this.value = new ko.observable("");
+            }
+
+            ObjectForm.SingleLineFlexField.prototype = jQuery.extend(true, {}, ObjectForm.FlexFieldBase.prototype);
+
+            /**
+             * Returns the type of the field
+             * 
+             * @returns {int} Type of the field
+             */
+            ObjectForm.SingleLineFlexField.prototype.getType = function() { return ObjectForm.FlexFieldTypeSingleLine; }
+
+            /**
+             * Returns the template name
+             * 
+             * @returns {string} Template Name
+             */
+            ObjectForm.SingleLineFlexField.prototype.getTemplateName = function() { return "gn-singleLineField"; }
+
+            /**
+             * Returns if the field can be exported to a script
+             * 
+             * @returns {bool} true if the value can be exported to a script, else false
+             */
+            ObjectForm.SingleLineFlexField.prototype.canExportToScript = function() { return true; }
+
+            /**
+             * Serializes the value to a string
+             * 
+             * @returns {string} Value of the field as a string
+             */
+            ObjectForm.SingleLineFlexField.prototype.serializeValue = function() { return this.value(); }
+
+            /**
+             * Deserializes a value from a string
+             * 
+             * @param {string} value Value to Deserialize
+             */
+            ObjectForm.SingleLineFlexField.prototype.deserializeValue = function(value) { this.value(value); }
+
+        }(FlexFieldDatabase.ObjectForm = FlexFieldDatabase.ObjectForm || {}));
+    }(GoNorth.FlexFieldDatabase = GoNorth.FlexFieldDatabase || {}));
+}(window.GoNorth = window.GoNorth || {}));
+(function(GoNorth) {
+    "use strict";
+    (function(FlexFieldDatabase) {
+        (function(ObjectForm) {
+
+            /**
+             * Type of the multi text line field
+             */
+            ObjectForm.FlexFieldTypeMultiLine = 1;
+
+            /**
+             * Class for a multi text line field
+             * 
+             * @class
+             */
+            ObjectForm.MultiLineFlexField = function() {
+                ObjectForm.FlexFieldBase.apply(this);
+
+                this.value = new ko.observable("");
+            }
+
+            ObjectForm.MultiLineFlexField.prototype = jQuery.extend(true, {}, ObjectForm.FlexFieldBase.prototype);
+
+            /**
+             * Returns the type of the field
+             * 
+             * @returns {int} Type of the field
+             */
+            ObjectForm.MultiLineFlexField.prototype.getType = function() { return ObjectForm.FlexFieldTypeMultiLine; }
+
+            /**
+             * Returns the template name
+             * 
+             * @returns {string} Template Name
+             */
+            ObjectForm.MultiLineFlexField.prototype.getTemplateName = function() { return "gn-multiLineField"; }
+
+            /**
+             * Returns if the field can be exported to a script
+             * 
+             * @returns {bool} true if the value can be exported to a script, else false
+             */
+            ObjectForm.MultiLineFlexField.prototype.canExportToScript = function() { return false; }
+
+            /**
+             * Serializes the value to a string
+             * 
+             * @returns {string} Value of the field as a string
+             */
+            ObjectForm.MultiLineFlexField.prototype.serializeValue = function() { return this.value(); }
+
+            /**
+             * Deserializes a value from a string
+             * 
+             * @param {string} value Value to Deserialize
+             */
+            ObjectForm.MultiLineFlexField.prototype.deserializeValue = function(value) { this.value(value); }
+
+        }(FlexFieldDatabase.ObjectForm = FlexFieldDatabase.ObjectForm || {}));
+    }(GoNorth.FlexFieldDatabase = GoNorth.FlexFieldDatabase || {}));
+}(window.GoNorth = window.GoNorth || {}));
+(function(GoNorth) {
+    "use strict";
+    (function(FlexFieldDatabase) {
+        (function(ObjectForm) {
+
+            /**
+             * Type of the number field
+             */
+            ObjectForm.FlexFieldTypeNumber = 2;
+
+            /**
+             * Class for a number field
+             * 
+             * @class
+             */
+            ObjectForm.NumberFlexField = function() {
+                ObjectForm.FlexFieldBase.apply(this);
+
+                this.value = new ko.observable(0.0);
+            }
+
+            ObjectForm.NumberFlexField.prototype = jQuery.extend(true, {}, ObjectForm.FlexFieldBase.prototype);
+
+            /**
+             * Returns the type of the field
+             * 
+             * @returns {int} Type of the field
+             */
+            ObjectForm.NumberFlexField.prototype.getType = function() { return ObjectForm.FlexFieldTypeNumber; }
+
+            /**
+             * Returns the template name
+             * 
+             * @returns {string} Template Name
+             */
+            ObjectForm.NumberFlexField.prototype.getTemplateName = function() { return "gn-numberField"; }
+
+            /**
+             * Returns if the field can be exported to a script
+             * 
+             * @returns {bool} true if the value can be exported to a script, else false
+             */
+            ObjectForm.NumberFlexField.prototype.canExportToScript = function() { return true; }
+
+            /**
+             * Serializes the value to a string
+             * 
+             * @returns {string} Value of the field as a string
+             */
+            ObjectForm.NumberFlexField.prototype.serializeValue = function() { return this.value() ? this.value().toString() : "0.0"; }
+
+            /**
+             * Deserializes a value from a string
+             * 
+             * @param {string} value Value to Deserialize
+             */
+            ObjectForm.NumberFlexField.prototype.deserializeValue = function(value) { 
+                var parsedValue = parseFloat(value);
+                if(!isNaN(parsedValue))
+                {
+                    this.value(parsedValue); 
+                }
+                else
+                {
+                    this.value(0.0);
+                }
+            }
+
+        }(FlexFieldDatabase.ObjectForm = FlexFieldDatabase.ObjectForm || {}));
+    }(GoNorth.FlexFieldDatabase = GoNorth.FlexFieldDatabase || {}));
+}(window.GoNorth = window.GoNorth || {}));
+(function(GoNorth) {
+    "use strict";
+    (function(FlexFieldDatabase) {
+        (function(ObjectForm) {
+
+            /**
+             * Type of the object field
+             */
+            ObjectForm.FlexFieldTypeOption = 3;
+
+            /**
+             * Class for an option field
+             * 
+             * @class
+             */
+            ObjectForm.OptionFlexField = function() {
+                ObjectForm.FlexFieldBase.apply(this);
+
+                this.value = new ko.observable(null);
+                this.options = new ko.observableArray();
+            }
+
+            ObjectForm.OptionFlexField.prototype = jQuery.extend(true, {}, ObjectForm.FlexFieldBase.prototype);
+
+            /**
+             * Returns the type of the field
+             * 
+             * @returns {int} Type of the field
+             */
+            ObjectForm.OptionFlexField.prototype.getType = function() { return ObjectForm.FlexFieldTypeOption; }
+
+            /**
+             * Returns the template name
+             * 
+             * @returns {string} Template Name
+             */
+            ObjectForm.OptionFlexField.prototype.getTemplateName = function() { return "gn-optionField"; }
+
+            /**
+             * Returns if the field can be exported to a script
+             * 
+             * @returns {bool} true if the value can be exported to a script, else false
+             */
+            ObjectForm.OptionFlexField.prototype.canExportToScript = function() { return true; }
+
+            /**
+             * Serializes the value to a string
+             * 
+             * @returns {string} Value of the field as a string
+             */
+            ObjectForm.OptionFlexField.prototype.serializeValue = function() { return this.value(); }
+
+            /**
+             * Deserializes a value from a string
+             * 
+             * @param {string} value Value to Deserialize
+             */
+            ObjectForm.OptionFlexField.prototype.deserializeValue = function(value) { this.value(value); }
+
+
+            /**
+             * Returns true if the field has additional configuration, else false
+             * 
+             * @returns {bool} true if the field has additional configuration, else false
+             */
+            ObjectForm.OptionFlexField.prototype.hasAdditionalConfiguration = function() { return true; }
+
+            /**
+             * Returns the label for additional configuration
+             * 
+             * @returns {string} Additional Configuration
+             */
+            ObjectForm.OptionFlexField.prototype.getAdditionalConfigurationLabel = function() { return GoNorth.FlexFieldDatabase.Localization.OptionFieldAdditionalConfigurationLabel; }
+
+            /**
+             * Returns true if the additional configuration can be edited for fields that were created based on template fields, else false
+             * 
+             * @returns {bool} true if the additional configuration can be edited for fields that were created based on template fields, else false
+             */
+            ObjectForm.OptionFlexField.prototype.allowEditingAdditionalConfigForTemplateFields = function() { return false; }
+
+            /**
+             * Sets additional configuration
+             * 
+             * @param {string} configuration Additional Configuration
+             */
+            ObjectForm.OptionFlexField.prototype.setAdditionalConfiguration = function(configuration) { 
+                var availableOptions = [];
+                if(configuration)
+                {
+                    availableOptions = configuration.split("\n");
+                }
+                
+                this.options(availableOptions)
+            }
+
+            /**
+             * Returns additional configuration
+             * 
+             * @returns {string} Additional Configuration
+             */
+            ObjectForm.OptionFlexField.prototype.getAdditionalConfiguration = function() { return this.options().join("\n"); }
+        
+            /**
+             * Serializes the additional configuration
+             * 
+             * @returns {string} Serialized additional configuration
+             */
+            ObjectForm.OptionFlexField.prototype.serializeAdditionalConfiguration = function() { return JSON.stringify(this.options()); },
+
+            /**
+             * Deserializes the additional configuration
+             * 
+             * @param {string} additionalConfiguration Serialized additional configuration
+             */
+            ObjectForm.OptionFlexField.prototype.deserializeAdditionalConfiguration = function(additionalConfiguration) { 
+                var options = [];
+                if(additionalConfiguration)
+                {
+                    options = JSON.parse(additionalConfiguration);
+                }
+
+                this.options(options);
+            }
+
+        }(FlexFieldDatabase.ObjectForm = FlexFieldDatabase.ObjectForm || {}));
+    }(GoNorth.FlexFieldDatabase = GoNorth.FlexFieldDatabase || {}));
+}(window.GoNorth = window.GoNorth || {}));
+(function(GoNorth) {
+    "use strict";
+    (function(FlexFieldDatabase) {
+        (function(ObjectForm) {
+
+            /**
+             * Type of the field group
+             */
+            ObjectForm.FlexFieldGroup = 100;
+
+            /**
+             * Class for a field group
+             * 
+             * @class
+             */
+            ObjectForm.FieldGroup = function() {
+                ObjectForm.FlexFieldBase.apply(this);
+
+                this.fields = new ko.observableArray();
+                this.deserializingFieldIds = null;
+
+                this.isExpandedByDefault = true;
+                this.areFieldsExpanded = new ko.observable(true);
+            }
+
+            ObjectForm.FieldGroup.prototype = jQuery.extend(true, {}, ObjectForm.FlexFieldBase.prototype);
+
+            /**
+             * Returns the type of the field
+             * 
+             * @returns {int} Type of the field
+             */
+            ObjectForm.FieldGroup.prototype.getType = function() { return ObjectForm.FlexFieldGroup; }
+
+            /**
+             * Returns the template name
+             * 
+             * @returns {string} Template Name
+             */
+            ObjectForm.FieldGroup.prototype.getTemplateName = function() { return "gn-fieldGroup"; }
+
+            /**
+             * Returns if the field can be exported to a script
+             * 
+             * @returns {bool} true if the value can be exported to a script, else false
+             */
+            ObjectForm.FieldGroup.prototype.canExportToScript = function() { return false; }
+
+            /**
+             * Serializes the value to a string
+             * 
+             * @param {number} fieldIndex Index of the field in the final serialization
+             * @returns {string} Value of the field as a string
+             */
+            ObjectForm.FieldGroup.prototype.serializeValue = function(fieldIndex) { 
+                var fieldIds = [];
+                var fields = this.fields();
+                for(var curField = 0; curField < fields.length; ++curField)
+                {
+                    // If field id is not yet filled it will be filled on the server side
+                    if(fields[curField].id())
+                    {
+                        fieldIds.push(fields[curField].id());
+                    }
+                    else
+                    {
+                        fieldIds.push((fieldIndex + curField + 1).toString());
+                    }
+                }
+
+                return JSON.stringify(fieldIds); 
+            }
+            
+            /**
+             * Returns all child fields
+             * 
+             * @returns {FlexFieldBase[]} Children of the field, null if no children exist
+             */
+            ObjectForm.FieldGroup.prototype.getChildFields = function() { 
+                return this.fields(); 
+            }
+
+            /**
+             * Deserializes a value from a string
+             * 
+             * @param {string} value Value to Deserialize
+             */
+            ObjectForm.FieldGroup.prototype.deserializeValue = function(value) { 
+                this.deserializingFieldIds = [];
+                if(value) 
+                {
+                    this.deserializingFieldIds = JSON.parse(value);
+                }
+            }
+
+            /**
+             * Serializes the additional configuration
+             * 
+             * @returns {string} Serialized additional configuration
+             */
+            ObjectForm.FieldGroup.prototype.serializeAdditionalConfiguration = function() { 
+                return JSON.stringify({
+                    isExpandedByDefault: this.isExpandedByDefault
+                }); 
+            },
+
+            /**
+             * Deserializes the additional configuration
+             * 
+             * @param {string} additionalConfiguration Serialized additional configuration
+             */
+            ObjectForm.FieldGroup.prototype.deserializeAdditionalConfiguration = function(additionalConfiguration) { 
+                if(additionalConfiguration)
+                {
+                    var deserializedConfig = JSON.parse(additionalConfiguration);
+                    this.isExpandedByDefault = deserializedConfig.isExpandedByDefault;
+                    this.areFieldsExpanded(this.isExpandedByDefault);
+                }
+            }
+            
+            /**
+             * Groups fields into the field
+             * 
+             * @param {FlexFieldBase[]} fields Root List of fields
+             * @param {object} fieldsToRemoveFromRootList Object to track fields that must be removed from the root list
+             */
+            ObjectForm.FieldGroup.prototype.groupFields = function(fields, fieldsToRemoveFromRootList) { 
+                if(!this.deserializingFieldIds)
+                {
+                    return;
+                }
+
+                for(var curGroupFieldId = 0; curGroupFieldId < this.deserializingFieldIds.length; ++curGroupFieldId)
+                {
+                    var fieldFound = false;
+                    for(var curField = 0; curField < fields.length; ++curField)
+                    {
+                        if(fields[curField].id() == this.deserializingFieldIds[curGroupFieldId])
+                        {
+                            // Check fieldsToRemoveFromRootList here to prevent duplicated fields if a new group was distributed from template 
+                            // using a field which a group in the current object includes
+                            if(!fieldsToRemoveFromRootList[curField])
+                            {
+                                this.fields.push(fields[curField]);
+                                fieldsToRemoveFromRootList[curField] = true;
+                            }
+                            fieldFound = true;
+                            break;
+                        }
+                    }
+
+                    // If a user creates a folder from template the index must be used
+                    if(!fieldFound && this.deserializingFieldIds[curGroupFieldId] && this.deserializingFieldIds[curGroupFieldId].indexOf("-") < 0)
+                    {
+                        var targetIndex = parseInt(this.deserializingFieldIds[curGroupFieldId]);
+                        if(!isNaN(targetIndex) && targetIndex >= 0 && targetIndex < fields.length)
+                        {
+                            this.fields.push(fields[targetIndex]);
+                            fieldsToRemoveFromRootList[targetIndex] = true;
+                        }
+                    }
+                }
+                this.deserializingFieldIds = null;
+            }
+
+
+            /**
+             * Toggles the field visibility
+             */
+            ObjectForm.FieldGroup.prototype.toogleFieldVisibility = function() {
+                this.areFieldsExpanded(!this.areFieldsExpanded());
+            }
+
+            /**
+             * Deletes a field
+             * 
+             * @param {FlexFieldBase} field Field to delete
+             */
+            ObjectForm.FieldGroup.prototype.deleteField = function(field) {
+                this.fields.remove(field);
+            }
+
+        }(FlexFieldDatabase.ObjectForm = FlexFieldDatabase.ObjectForm || {}));
+    }(GoNorth.FlexFieldDatabase = GoNorth.FlexFieldDatabase || {}));
+}(window.GoNorth = window.GoNorth || {}));
+(function(GoNorth) {
+    "use strict";
+    (function(FlexFieldDatabase) {
+        (function(ObjectForm) {
+
+            /**
+             * Class for managing flex fields
+             * 
+             * @class
+             */
+            ObjectForm.FlexFieldManager = function() {
+                this.fields = new ko.observableArray();
+            }
+
+            ObjectForm.FlexFieldManager.prototype = {
+                /**
+                 * Adds a single line field to the manager
+                 * 
+                 * @param {string} name Name of the field
+                 */
+                addSingleLineField: function(name) {
+                    return this.addField(ObjectForm.FlexFieldTypeSingleLine, name);
+                },
+
+                /**
+                 * Adds a multi line field to the manager
+                 * 
+                 * @param {string} name Name of the field
+                 * @returns {FlexFieldBase} New field
+                 */
+                addMultiLineField: function(name) {
+                    return this.addField(ObjectForm.FlexFieldTypeMultiLine, name);
+                },
+
+                /**
+                 * Adds a number field to the manager
+                 * 
+                 * @param {string} name Name of the field
+                 * @returns {FlexFieldBase} New field
+                 */
+                addNumberField: function(name) {
+                    return this.addField(ObjectForm.FlexFieldTypeNumber, name);
+                },
+                
+                /**
+                 * Adds a option field to the manager
+                 * 
+                 * @param {string} name Name of the field
+                 * @returns {FlexFieldBase} New field
+                 */
+                addOptionField: function(name) {
+                    return this.addField(ObjectForm.FlexFieldTypeOption, name);
+                },
+
+                /**
+                 * Adds a field group to the manager
+                 * 
+                 * @param {string} name Name of the group
+                 * @returns {FlexFieldBase} New field
+                 */
+                addFieldGroup: function(name) {
+                    return this.addField(ObjectForm.FlexFieldGroup, name);
+                },
+
+                /**
+                 * Adds a field to the manager
+                 * 
+                 * @param {int} fieldType Type of the field
+                 * @param {string} name Name of the field
+                 * @returns {FlexFieldBase} New field
+                 */
+                addField: function(fieldType, name) {
+                    var field = this.resolveFieldByType(fieldType);
+                    if(!field)
+                    {
+                        throw "Unknown field type";
+                    }
+
+                    field.name(name);
+                    this.fields.push(field);
+                    return field;
+                },
+
+                /**
+                 * Resolves a field by a type
+                 * 
+                 * @param {int} fieldType Field Type
+                 */
+                resolveFieldByType: function(fieldType) {
+                    switch(fieldType)
+                    {
+                    case ObjectForm.FlexFieldTypeSingleLine:
+                        return new ObjectForm.SingleLineFlexField();
+                    case ObjectForm.FlexFieldTypeMultiLine:
+                        return new ObjectForm.MultiLineFlexField();
+                    case ObjectForm.FlexFieldTypeNumber:
+                        return new ObjectForm.NumberFlexField();
+                    case ObjectForm.FlexFieldTypeOption:
+                        return new ObjectForm.OptionFlexField();
+                    case ObjectForm.FlexFieldGroup:
+                        return new ObjectForm.FieldGroup();
+                    }
+
+                    return null;
+                },
+
+
+                /**
+                 * Deletes a field
+                 * 
+                 * @param {FlexFieldBase} field Field to delete
+                 */
+                deleteField: function(field) {
+                    this.fields.remove(field);
+                },
+
+                /**
+                 * Deletes a field group
+                 * 
+                 * @param {FieldGroup} fieldGroup Field group to delete
+                 */
+                deleteFieldGroup: function(field) {
+                    if(field.fields) {
+                        var targetPushIndex = this.fields.indexOf(field);
+                        var fieldsInGroup = field.fields();
+                        for(var curField = 0; curField < fieldsInGroup.length; ++curField)
+                        {
+                            if(targetPushIndex < 0)
+                            {
+                                this.fields.push(fieldsInGroup[curField]);
+                            }
+                            else
+                            {
+                                this.fields.splice(targetPushIndex + curField, 0, fieldsInGroup[curField]);
+                            }
+                        }
+                    }
+                    
+                    this.fields.remove(field);
+                },
+
+
+                /**
+                 * Serializes the fields to an array with values
+                 * 
+                 * @returns {object[]} Serialized values
+                 */
+                serializeFields: function() {
+                    var serializedValues = [];
+                    var fields = this.fields();
+                    for(var curField = 0; curField < fields.length; ++curField)
+                    {
+                        serializedValues.push(this.serializeSingleField(fields[curField], serializedValues));
+
+                        var childFields = fields[curField].getChildFields();
+                        if(childFields)
+                        {
+                            for(var curChild = 0; curChild < childFields.length; ++curChild)
+                            {
+                                serializedValues.push(this.serializeSingleField(childFields[curChild], serializedValues));
+                            }
+                        }
+                    }
+
+                    return serializedValues;
+                },
+
+                /**
+                 * Serializes a single field
+                 * 
+                 * @param {FlexFieldBase} field Field to serialize
+                 * @param {object[]} serializedValues Already serialized values
+                 * @returns {object} Serialized field
+                 */
+                serializeSingleField: function(field, serializedValues) {
+                    return {
+                        id: field.id(),
+                        createdFromTemplate: field.createdFromTemplate(),
+                        fieldType: field.getType(),
+                        name: field.name(),
+                        value: field.serializeValue(serializedValues.length),
+                        additionalConfiguration: field.serializeAdditionalConfiguration(),
+                        scriptSettings: field.scriptSettings.serialize()
+                    };
+                },
+
+                /**
+                 * Deserializes saved fields fields
+                 * 
+                 * @param {objec[]} serializedValues Serialized values 
+                 */
+                deserializeFields: function(serializedValues) {
+                    var fields = [];
+                    for(var curField = 0; curField < serializedValues.length; ++curField)
+                    {
+                        var deserializedField = this.resolveFieldByType(serializedValues[curField].fieldType);
+                        deserializedField.id(serializedValues[curField].id);
+                        deserializedField.createdFromTemplate(serializedValues[curField].createdFromTemplate);
+                        deserializedField.name(serializedValues[curField].name);
+                        deserializedField.deserializeValue(serializedValues[curField].value);
+                        deserializedField.deserializeAdditionalConfiguration(serializedValues[curField].additionalConfiguration);
+                        deserializedField.scriptSettings.deserialize(serializedValues[curField].scriptSettings);
+                        fields.push(deserializedField);
+                    }
+
+                    var fieldsToRemoveFromRootList = {};
+                    for(var curField = 0; curField < fields.length; ++curField)
+                    {
+                        fields[curField].groupFields(fields, fieldsToRemoveFromRootList);
+                    }
+
+                    for(var curField = fields.length - 1; curField >= 0; --curField)
+                    {
+                        if(fieldsToRemoveFromRootList[curField])
+                        {
+                            fields.splice(curField, 1);
+                        }
+                    }
+
+                    this.fields(fields);
+                },
+
+                /**
+                 * Syncs the field ids back after save
+                 * 
+                 * @param {object} flexFieldObjectData Response flex field object data after save
+                 */
+                syncFieldIds: function(flexFieldObjectData) {
+                    var fieldLookup = {};
+                    for(var curField = 0; curField < flexFieldObjectData.fields.length; ++curField)
+                    {
+                        fieldLookup[flexFieldObjectData.fields[curField].name] = flexFieldObjectData.fields[curField].id;
+                    }
+
+                    var fields = this.fields();
+                    for(var curField = 0; curField < fields.length; ++curField)
+                    {
+                        fields[curField].id(fieldLookup[fields[curField].name()]);
+                    }
+                },
+
+                /**
+                 * Flags all fields as created from template
+                 */
+                flagFieldsAsCreatedFromTemplate: function() {
+                    var fields = this.fields();
+                    for(var curField = 0; curField < fields.length; ++curField)
+                    {
+                        fields[curField].createdFromTemplate(true);
+                        var children = fields[curField].getChildFields();
+                        if(!children)
+                        {
+                            continue;
+                        }
+
+                        for(var curChild = 0; curChild < children.length; ++curChild)
+                        {
+                            children[curChild].createdFromTemplate(true);
+                        }
+                    }
+                },
+
+
+                /**
+                 * Checks if a field name is in used
+                 * 
+                 * @param {string} fieldName Name of the field to check
+                 * @param {string} fieldToIgnore Field to ignore during the check (important for rename)
+                 */
+                isFieldNameInUse: function(fieldName, fieldToIgnore) {
+                    fieldName = fieldName.toLowerCase();
+
+                    var fields = this.fields();
+                    for(var curField = 0; curField < fields.length; ++curField)
+                    {
+                        if(fields[curField] != fieldToIgnore && fields[curField].name() && fields[curField].name().toLowerCase() == fieldName)
+                        {
+                            return true;
+                        }
+
+                        var children = fields[curField].getChildFields();
+                        if(!children)
+                        {
+                            continue;
+                        }
+
+                        for(var curChild = 0; curChild < children.length; ++curChild)
+                        {
+                            if(children[curChild] != fieldToIgnore && children[curChild].name() && children[curChild].name().toLowerCase() == fieldName)
+                            {
+                                return true;
+                            }
+                        }
+                    }
+                }
+            }
+
+        }(FlexFieldDatabase.ObjectForm = FlexFieldDatabase.ObjectForm || {}));
+    }(GoNorth.FlexFieldDatabase = GoNorth.FlexFieldDatabase || {}));
+}(window.GoNorth = window.GoNorth || {}));
+(function(GoNorth) {
+    "use strict";
+    (function(FlexFieldDatabase) {
+        (function(ObjectForm) {
+
+            /**
+             * Flex Field Handling Viewmodel with pure field handling
+             * @class
+             */
+            ObjectForm.FlexFieldHandlingViewModel = function()
+            {
+                this.fieldManager = new GoNorth.FlexFieldDatabase.ObjectForm.FlexFieldManager();
+
+                this.showFieldCreateEditDialog = new ko.observable(false);
+                this.isEditingField = new ko.observable(false);
+                this.fieldToEdit = null;
+                this.createEditFieldName = new ko.observable("");
+                this.createEditFieldAdditionalConfigurationDisabled = new ko.observable(false);
+                this.createEditFieldHasAdditionalConfiguration = new ko.observable(false);
+                this.createEditFieldAdditionalConfiguration = new ko.observable("");
+                this.createEditFieldAdditionalConfigurationLabel = new ko.observable("");
+                this.createEditFieldDeferred = null;
+
+                this.showConfirmFieldDeleteDialog = new ko.observable(false);
+                this.fieldToDelete = null;
+                this.fieldToDeleteParent = null;
+
+                this.showFieldScriptSettingsDialog = new ko.observable(false);
+                this.dontExportFieldToScript = new ko.observable();
+                this.additionalFieldScriptNames = new ko.observable();
+                this.scriptSettingsField = null;
+
+                this.showFieldGroupCreateEditDialog = new ko.observable(false);
+                this.fieldGroupToEdit = null;
+                this.isEditingFieldGroup = new ko.observable(false);
+                this.createEditFieldGroupName = new ko.observable("");
+                this.createEditFieldGroupExpandedByDefault = new ko.observable(false);
+
+                this.showDuplicateFieldNameError = new ko.observable(false);
+
+                var self = this;
+                this.createEditFieldName.subscribe(function() {
+                    self.showDuplicateFieldNameError(false);
+                });
+                this.createEditFieldGroupName.subscribe(function() {
+                    self.showDuplicateFieldNameError(false);
+                });
+                
+                this.showConfirmFieldGroupDeleteDialog = new ko.observable(false);
+                this.fieldGroupToDelete = null;
+            };
+
+            ObjectForm.FlexFieldHandlingViewModel.prototype = {
+                /**
+                 * Function gets called after a new field was added
+                 */
+                onFieldAdded: function() {
+
+                },
+
+                /**
+                 * Adds a single line field to the object
+                 */
+                addSingleLineField: function() {
+                    var self = this;
+                    this.openCreateEditFieldDialog(false, "").done(function(name) {
+                        self.fieldManager.addSingleLineField(name);
+                        self.onFieldAdded();
+                    });
+                },
+
+                /**
+                 * Adds a multi line field to the object
+                 */
+                addMultiLineField: function() {
+                    var self = this;
+                    this.openCreateEditFieldDialog(false, "").done(function(name) {
+                        self.fieldManager.addMultiLineField(name);
+                        self.onFieldAdded();
+                    });
+                },
+
+                /**
+                 * Adds a number field to the object
+                 */
+                addNumberField: function() {
+                    var self = this;
+                    this.openCreateEditFieldDialog(false, "").done(function(name) {
+                        self.fieldManager.addNumberField(name);
+                        self.onFieldAdded();
+                    });
+                },
+
+                /**
+                 * Adds an option field to the object
+                 */
+                addOptionField: function() {
+                    var self = this;
+                    this.openCreateEditFieldDialog(false, "", true, "", GoNorth.FlexFieldDatabase.Localization.OptionFieldAdditionalConfigurationLabel, false).done(function(name, additionalConfiguration) {
+                        var optionField = self.fieldManager.addOptionField(name);
+                        optionField.setAdditionalConfiguration(additionalConfiguration);
+                        self.onFieldAdded();
+                    });
+                },
+
+
+                /**
+                 * Edits a field
+                 * 
+                 * @param {FlexFieldBase} field Object Field
+                 */
+                editField: function(field) {
+                    var disableAdditionalConfig = !field.allowEditingAdditionalConfigForTemplateFields() && field.createdFromTemplate();
+                    this.openCreateEditFieldDialog(true, field, field.hasAdditionalConfiguration(), field.getAdditionalConfiguration(), field.getAdditionalConfigurationLabel(), disableAdditionalConfig).done(function(name, additionalConfiguration) {
+                        field.name(name);
+
+                        if(field.hasAdditionalConfiguration())
+                        {
+                            field.setAdditionalConfiguration(additionalConfiguration);
+                        }
+                    });
+                },
+
+
+                /**
+                 * Opens the create/edit field dialog
+                 * 
+                 * @param {bool} isEdit true if its an edit operation, else false
+                 * @param {FlexFieldBase} fieldToEdit Field to edit
+                 * @param {bool} hasAdditionalConfiguration true if additional configuration is required for the field
+                 * @param {string} existingAdditionalConfiguration Existing additional Configuration
+                 * @param {string} additionalConfigurationLabel Label for the additional configuration
+                 * @param {bool} disableAdditionalConfiguration true if the additional configuration should be disabled, else false
+                 * @returns {jQuery.Deferred} Deferred which will be resolved once the user presses save
+                 */
+                openCreateEditFieldDialog: function(isEdit, fieldToEdit, hasAdditionalConfiguration, existingAdditionalConfiguration, additionalConfigurationLabel, disableAdditionalConfiguration) {
+                    this.createEditFieldDeferred = new jQuery.Deferred();
+
+                    this.isEditingField(isEdit);
+                    if(fieldToEdit)
+                    {
+                        this.createEditFieldName(fieldToEdit.name());
+                        this.fieldToEdit = fieldToEdit;
+                    }
+                    else
+                    {
+                        this.createEditFieldName("");
+                        this.fieldToEdit = null;
+                    }
+
+                    this.createEditFieldHasAdditionalConfiguration(hasAdditionalConfiguration ? true : false);
+                    if(hasAdditionalConfiguration)
+                    {
+                        this.createEditFieldAdditionalConfigurationDisabled(disableAdditionalConfiguration)
+                        this.createEditFieldAdditionalConfigurationLabel(additionalConfigurationLabel);
+                        this.createEditFieldAdditionalConfiguration(existingAdditionalConfiguration ? existingAdditionalConfiguration : "");
+                    }
+
+                    GoNorth.Util.setupValidation("#gn-fieldCreateEditForm");
+                    this.showFieldCreateEditDialog(true);
+
+                    return this.createEditFieldDeferred.promise();
+                },
+
+                /**
+                 * Saves the field
+                 */
+                saveField: function() {
+                    if(!jQuery("#gn-fieldCreateEditForm").valid())
+                    {
+                        return;
+                    }
+
+                    // TODO: Check for field edit to ignore current ifeld
+                    if(this.fieldManager.isFieldNameInUse(this.createEditFieldName(), this.fieldToEdit))
+                    {
+                        this.showDuplicateFieldNameError(true);
+                        return;
+                    }
+
+                    if(this.createEditFieldDeferred)
+                    {
+                        var additionalConfiguration = null;
+                        if(this.createEditFieldHasAdditionalConfiguration())
+                        {
+                            additionalConfiguration = this.createEditFieldAdditionalConfiguration();
+                        }
+                        this.createEditFieldDeferred.resolve(this.createEditFieldName(), additionalConfiguration);
+                    }
+                    this.createEditFieldDeferred = null;
+                    this.showFieldCreateEditDialog(false);
+                },
+
+                /**
+                 * Cancels the field dialog
+                 */
+                cancelFieldDialog: function() {
+                    if(this.createEditFieldDeferred)
+                    {
+                        this.createEditFieldDeferred.reject();
+                    }
+                    this.createEditFieldDeferred = null; 
+                    this.fieldToEdit = null;
+                    this.showFieldCreateEditDialog(false);
+                },
+
+
+                /**
+                 * Opens the create new field group dialog
+                 */
+                openCreateNewFieldGroupDialog: function() {
+                    GoNorth.Util.setupValidation("#gn-fieldGroupCreateEditForm");
+                    this.showFieldGroupCreateEditDialog(true);
+                    this.fieldGroupToEdit = null;
+                    this.isEditingFieldGroup(false);
+                    this.createEditFieldGroupName("");
+                    this.createEditFieldGroupExpandedByDefault(true);
+                },
+
+                /**
+                 * Opens the edit field group dialog
+                 * 
+                 * @param {FieldGroup} fieldGroupToEdit Field group to edit
+                 */
+                openEditFieldGroupDialog: function(fieldGroupToEdit) {
+                    GoNorth.Util.setupValidation("#gn-fieldGroupCreateEditForm");
+                    this.showFieldGroupCreateEditDialog(true);
+                    this.fieldGroupToEdit = fieldGroupToEdit;
+                    this.isEditingFieldGroup(true);
+                    this.createEditFieldGroupName(fieldGroupToEdit.name());
+                    this.createEditFieldGroupExpandedByDefault(fieldGroupToEdit.isExpandedByDefault);
+                },
+
+                /**
+                 * Saves the field group
+                 */
+                saveFieldGroup: function() {
+                    if(!jQuery("#gn-fieldGroupCreateEditForm").valid())
+                    {
+                        return;
+                    }
+
+                    if(this.fieldManager.isFieldNameInUse(this.createEditFieldGroupName(), this.fieldGroupToEdit))
+                    {
+                        this.showDuplicateFieldNameError(true);
+                        return;
+                    }
+
+                    if(this.fieldGroupToEdit == null)
+                    {
+                        var fieldGroup = this.fieldManager.addFieldGroup(this.createEditFieldGroupName());
+                        fieldGroup.isExpandedByDefault = this.createEditFieldGroupExpandedByDefault();
+                        fieldGroup.areFieldsExpanded(fieldGroup.isExpandedByDefault);
+                    }
+                    else
+                    {
+                        this.fieldGroupToEdit.name(this.createEditFieldGroupName());
+                        this.fieldGroupToEdit.isExpandedByDefault = this.createEditFieldGroupExpandedByDefault();
+                        this.fieldGroupToEdit.areFieldsExpanded(this.fieldGroupToEdit.isExpandedByDefault);
+                    }
+                    this.closeFieldGroupDialog();
+                },
+
+                /**
+                 * Closes the field group dialog
+                 */
+                closeFieldGroupDialog: function() {
+                    this.fieldGroupToEdit = null;
+                    this.showFieldGroupCreateEditDialog(false);
+                },
+
+                /**
+                 * Opens the confirm delete field group dialog
+                 * 
+                 * @param {FieldGroup} fieldGroup Field group to delete
+                 */
+                openConfirmDeleteFieldGroupDialog: function(fieldGroup) {
+                    this.showConfirmFieldGroupDeleteDialog(true);
+                    this.fieldGroupToDelete = fieldGroup;
+                },
+
+                /**
+                 * Closes the confirm field group delete dialog
+                 */
+                closeConfirmFieldGroupDeleteDialog: function() {
+                    this.showConfirmFieldGroupDeleteDialog(false);
+                    this.fieldGroupToDelete = null;
+                },
+
+                /**
+                 * Deletes the current field group
+                 */
+                deleteFieldGroup: function() {
+                    this.fieldManager.deleteFieldGroup(this.fieldGroupToDelete);
+                    this.closeConfirmFieldGroupDeleteDialog();
+                },
+
+                /**
+                 * Checks if a field drop is allowed
+                 * 
+                 * @param {object} dropEvent Drop event 
+                 */
+                checkFieldDropAllowed: function(dropEvent) {
+                    if(dropEvent.item.getType() == ObjectForm.FlexFieldGroup && dropEvent.targetParent != this.fieldManager.fields) {
+                        dropEvent.cancelDrop = true;
+                    }
+                },
+
+
+                /**
+                 * Opens the delete field dialog
+                 * 
+                 * @param {FlexFieldBase} field Field to delete
+                 * @param {object} fieldParent Field parent
+                 */
+                openConfirmDeleteFieldDialog: function(field, fieldParent) {
+                    this.showConfirmFieldDeleteDialog(true);
+                    this.fieldToDelete = field;
+                    this.fieldToDeleteParent = fieldParent;
+                },
+
+                /**
+                 * Closes the confirm field delete dialog
+                 */
+                closeConfirmFieldDeleteDialog: function() {
+                    this.showConfirmFieldDeleteDialog(false);
+                    this.fieldToDelete = null;
+                    this.fieldToDeleteParent = null;
+                },
+
+                /**
+                 * Deletes the field for which the dialog is opened
+                 */
+                deleteField: function() {
+                    if(this.fieldToDeleteParent != null && typeof(this.fieldToDeleteParent.getType) == "function" && this.fieldToDeleteParent.getType() == ObjectForm.FlexFieldGroup)
+                    {
+                        this.fieldToDeleteParent.deleteField(this.fieldToDelete);
+                    }
+                    else
+                    {
+                        this.fieldManager.deleteField(this.fieldToDelete);
+                    }
+
+                    this.closeConfirmFieldDeleteDialog();
+                },
+
+
+                /**
+                 * Opens the script settings for a field
+                 * 
+                 * @param {FlexFieldBase} field Field for which the settings should be opened
+                 */
+                openScriptSettings: function(field) {
+                    this.showFieldScriptSettingsDialog(true);
+                    this.dontExportFieldToScript(field.scriptSettings.dontExportToScript);
+                    this.additionalFieldScriptNames(field.scriptSettings.additionalScriptNames);
+                    this.scriptSettingsField = field;
+                },
+
+                /**
+                 * Saves the field script settings
+                 */
+                saveFieldScriptSettings: function() {
+                    this.scriptSettingsField.scriptSettings.dontExportToScript = this.dontExportFieldToScript();
+                    this.scriptSettingsField.scriptSettings.additionalScriptNames = this.additionalFieldScriptNames();
+                    this.closeFieldScriptSettingsDialog();
+                },
+
+                /**
+                 * Closes the field script settings dialog
+                 */
+                closeFieldScriptSettingsDialog: function() {
+                    this.showFieldScriptSettingsDialog(false);
+                    this.scriptSettingsField = null;
+                }
+            };
+
+        }(FlexFieldDatabase.ObjectForm = FlexFieldDatabase.ObjectForm || {}));
+    }(GoNorth.FlexFieldDatabase = GoNorth.FlexFieldDatabase || {}));
+}(window.GoNorth = window.GoNorth || {}));
+(function(GoNorth) {
+    "use strict";
+    (function(FlexFieldDatabase) {
+        (function(ObjectForm) {
+
+            /**
+             * Object Form Base View Model
+             * @param {string} rootPage Root Page
+             * @param {string} apiControllerName Api Controller name
+             * @param {string} lockName Name of the resource used for the lock for an object of this type
+             * @param {string} templateLockName Name of the resource used for the lock for a template of this type
+             * @param {string} kirjaApiMentionedMethod Method of the kirja api which is used to load the pages in which the object is mentioned
+             * @param {string} kartaApiMentionedMethod Method of the karta api which is used to load the maps in which the object is mentioned
+             * @class
+             */
+            ObjectForm.BaseViewModel = function(rootPage, apiControllerName, lockName, templateLockName, kirjaApiMentionedMethod, kartaApiMarkedMethod)
+            {
+                GoNorth.FlexFieldDatabase.ObjectForm.FlexFieldHandlingViewModel.apply(this);
+
+                this.rootPage = rootPage;
+                this.apiControllerName = apiControllerName;
+
+                this.lockName = lockName;
+                this.templateLockName = templateLockName;
+
+                this.kirjaApiMentionedMethod = kirjaApiMentionedMethod;
+                this.kartaApiMarkedMethod = kartaApiMarkedMethod;
+
+                this.isTemplateMode = new ko.observable(false);
+                if(GoNorth.Util.getParameterFromUrl("template"))
+                {
+                    this.isTemplateMode(true);
+                }
+
+                this.id = new ko.observable("");
+                var paramId = GoNorth.Util.getParameterFromUrl("id");
+                if(paramId)
+                {
+                    this.id(paramId);
+                }
+
+                this.objectImageUploadUrl = new ko.computed(function() {
+                    if(this.isTemplateMode())
+                    {
+                        return "/api/" + this.apiControllerName + "/FlexFieldTemplateImageUpload?id=" + this.id();
+                    }
+                    else
+                    {
+                        return "/api/" + this.apiControllerName + "/FlexFieldImageUpload?id=" + this.id();
+                    }
+                }, this);
+
+                var templateId = GoNorth.Util.getParameterFromUrl("templateId");
+                this.templateId = templateId;
+                this.parentFolderId = GoNorth.Util.getParameterFromUrl("folderId");
+                
+                this.isReadonly = new ko.observable(false);
+                this.lockedByUser = new ko.observable("");
+
+                this.isLoading = new ko.observable(false);
+
+                this.isImplemented = new ko.observable(false);
+                this.compareDialog = new GoNorth.ImplementationStatus.CompareDialog.ViewModel();
+
+                this.objectName = new ko.observable("");
+                this.imageFilename = new ko.observable("");
+                this.thumbnailImageFilename = new ko.observable("");
+                this.objectTags = new ko.observableArray();
+                this.existingObjectTags = new ko.observableArray();
+
+                this.objectNameDisplay = new ko.computed(function() {
+                    var name = this.objectName();
+                    if(name)
+                    {
+                        return " - " + name;
+                    }
+
+                    return "";
+                }, this);
+
+                this.showConfirmObjectDeleteDialog = new ko.observable(false);
+                this.showCustomizedExportTemplateWarningOnDelete = new ko.observable(false);
+
+                this.showConfirmRegenerateLanguageKeysDialog = new ko.observable(false);
+
+                this.showExportResultDialog = new ko.observable(false);
+                this.exportResultContent = new ko.observable("");
+                this.exportResultErrors = new ko.observableArray();
+                this.exportResultFormat = "";
+                this.exportShowSuccessfullyCopiedTooltip = new ko.observable(false);
+
+                this.referencedInQuests = new ko.observableArray();
+                this.loadingReferencedInQuests = new ko.observable(false);
+                this.errorLoadingReferencedInQuests = new ko.observable(false);
+
+                this.mentionedInKirjaPages = new ko.observableArray();
+                this.loadingMentionedInKirjaPages = new ko.observable(false);
+                this.errorLoadingMentionedInKirjaPages = new ko.observable(false);
+
+                this.markedInKartaMaps = new ko.observableArray();
+                this.loadingMarkedInKartaMaps = new ko.observable(false);
+                this.errorLoadingMarkedInKartaMaps = new ko.observable(false);
+
+                this.referencedInTaleDialogs = new ko.observableArray();
+                this.loadingReferencedInTaleDialogs = new ko.observable(false);
+                this.errorLoadingReferencedInTaleDialogs = new ko.observable(false);
+
+                this.errorOccured = new ko.observable(false);
+                this.additionalErrorDetails = new ko.observable("");
+                this.objectNotFound = new ko.observable(false);
+
+                GoNorth.Util.setupValidation("#gn-objectFields");
+
+                if(this.id() && this.isTemplateMode())
+                {
+                    this.checkIfCustomizedExportTemplateExists();
+                }
+            };
+
+            
+            ObjectForm.BaseViewModel.prototype = jQuery.extend({ }, GoNorth.FlexFieldDatabase.ObjectForm.FlexFieldHandlingViewModel.prototype);
+
+            /**
+             * Loads additional dependencies
+             */
+            ObjectForm.BaseViewModel.prototype.loadAdditionalDependencies = function() {
+
+            };
+
+            /**
+             * Parses additional data from a loaded object
+             * 
+             * @param {object} data Data returned from the webservice
+             */
+            ObjectForm.BaseViewModel.prototype.parseAdditionalData = function(data) {
+
+            };
+
+            /**
+             * Sets Additional save data
+             * 
+             * @param {object} data Save data
+             * @returns {object} Save data with additional values
+             */
+            ObjectForm.BaseViewModel.prototype.setAdditionalSaveData = function(data) {
+                return data;
+            };
+
+
+
+            /**
+             * Initializes the form, called by implementations
+             */
+            ObjectForm.BaseViewModel.prototype.init = function() {
+                if(this.id())
+                {
+                    this.loadObjectData(this.id(), this.isTemplateMode());
+                    
+                    if(GoNorth.FlexFieldDatabase.ObjectForm.hasAikaRights && !this.isTemplateMode())
+                    {
+                        this.loadAikaQuests();
+                    }
+
+                    if(GoNorth.FlexFieldDatabase.ObjectForm.hasKirjaRights && !this.isTemplateMode())
+                    {
+                        this.loadKirjaPages();
+                    }
+
+                    if(GoNorth.FlexFieldDatabase.ObjectForm.hasKartaRights && !this.isTemplateMode())
+                    {
+                        this.loadKartaMaps();
+                    }
+
+                    if(GoNorth.FlexFieldDatabase.ObjectForm.hasTaleRights && !this.isTemplateMode())
+                    {
+                        this.loadTaleDialogs();
+                    } 
+
+                    this.loadAdditionalDependencies();
+
+                    this.acquireLock();
+                }
+                else if(this.templateId)
+                {
+                    this.loadObjectData(this.templateId, true);
+                }
+                this.loadExistingObjectTags();
+            };
+
+            /**
+             * Checks if a customized export template exists
+             */
+            ObjectForm.BaseViewModel.prototype.checkIfCustomizedExportTemplateExists = function() {
+                if(!this.id())
+                {
+                    return;
+                }
+                
+                var self = this;
+                jQuery.ajax({ 
+                    url: "/api/ExportApi/DoesExportTemplateExistForObjectId?id=" + this.id(), 
+                    type: "GET"
+                }).done(function(data) {
+                    self.showCustomizedExportTemplateWarningOnDelete(data.doesTemplateExist);
+                }).fail(function(xhr) {
+                    self.errorOccured(true);
+                });
+            };
+
+            /**
+             * Resets the error state
+             */
+            ObjectForm.BaseViewModel.prototype.resetErrorState = function() {
+                this.errorOccured(false);
+                this.additionalErrorDetails("");
+                this.objectNotFound(false);
+            };
+
+            /**
+             * Loads all existing objects tags for the tag dropdown list
+             */
+            ObjectForm.BaseViewModel.prototype.loadExistingObjectTags = function() {
+                var self = this;
+                jQuery.ajax({ 
+                    url: "/api/" + this.apiControllerName + "/FlexFieldObjectTags", 
+                    type: "GET"
+                }).done(function(data) {
+                    self.existingObjectTags(data);
+                }).fail(function(xhr) {
+                    self.errorOccured(true);
+                });
+            };
+
+            /**
+             * Loads the object data
+             * 
+             * @param {string} id Id of the data to load
+             * @param {bool} fromTemplate true if the value should be loaded from a template
+             */
+            ObjectForm.BaseViewModel.prototype.loadObjectData = function(id, fromTemplate) {
+                var url = "/api/" + this.apiControllerName + "/FlexFieldObject";
+                if(fromTemplate)
+                {
+                    url = "/api/" + this.apiControllerName + "/FlexFieldTemplate"
+                }
+                url += "?id=" + id;
+
+                this.isLoading(true);
+                this.resetErrorState();
+                var self = this;
+                jQuery.ajax({ 
+                    url: url, 
+                    type: "GET"
+                }).done(function(data) {
+                    self.isLoading(false);
+                    if(!data)
+                    {
+                        self.errorOccured(true);
+                        self.objectNotFound(true);
+                        return;
+                    }
+                    
+                    if(!fromTemplate)
+                    {
+                        self.templateId = !self.isTemplateMode() ? data.templateId : "";
+                        self.isImplemented(!self.isTemplateMode() ? data.isImplemented : false);
+                    }
+
+                    if(!fromTemplate || self.isTemplateMode())
+                    {
+                        self.objectName(data.name);
+                    }
+                    else
+                    {
+                        self.objectName("");
+                    }
+                    self.parseAdditionalData(data);
+                    
+                    self.thumbnailImageFilename(data.thumbnailImageFile);
+                    self.imageFilename(data.imageFile);
+                    self.fieldManager.deserializeFields(data.fields);
+
+                    if(fromTemplate && !self.isTemplateMode())
+                    {
+                        self.fieldManager.flagFieldsAsCreatedFromTemplate();
+                    }
+
+                    self.objectTags(data.tags);
+                }).fail(function(xhr) {
+                    self.isLoading(false);
+                    self.errorOccured(true);
+                });
+            };
+
+            /**
+             * Saves the form
+             */
+            ObjectForm.BaseViewModel.prototype.save = function() {
+                this.sendSaveRequest(false);
+            };
+
+            /**
+             * Saves the form and distribute the fields to objects
+             */
+            ObjectForm.BaseViewModel.prototype.saveAndDistributeFields = function() {
+                this.sendSaveRequest(true);
+            };
+
+            /**
+             * Saves the form
+             * 
+             * @param {bool} distributeFields true if the fields should be distributed, else false
+             */
+            ObjectForm.BaseViewModel.prototype.sendSaveRequest = function(distributeFields) {
+                if(!jQuery("#gn-objectFields").valid())
+                {
+                    return;
+                }
+
+                // Send Data
+                var serializedFields = this.fieldManager.serializeFields();
+                var requestObject = {
+                    templateId: !this.isTemplateMode() ? this.templateId : "",
+                    name: this.objectName(),
+                    fields: serializedFields,
+                    tags: this.objectTags()
+                };
+                requestObject = this.setAdditionalSaveData(requestObject);
+
+                // Create mode values
+                if(!this.isTemplateMode() && !this.id())
+                {
+                    requestObject.parentFolderId = this.parentFolderId;
+                    if(this.imageFilename())
+                    {
+                        requestObject.imageFile = this.imageFilename();
+                    }
+
+                    if(this.thumbnailImageFilename())
+                    {
+                        requestObject.thumbnailImageFile = this.thumbnailImageFilename();
+                    }
+                }
+
+                var url = "";
+                if(this.isTemplateMode())
+                {
+                    if(this.id())
+                    {
+                        url = "/api/" + this.apiControllerName + "/UpdateFlexFieldTemplate?id=" + this.id();
+                    }
+                    else
+                    {
+                        url = "/api/" + this.apiControllerName + "/CreateFlexFieldTemplate";
+                    }
+                }
+                else
+                {
+                    if(this.id())
+                    {
+                        url = "/api/" + this.apiControllerName + "/UpdateFlexFieldObject?id=" + this.id();
+                    }
+                    else
+                    {
+                        url = "/api/" + this.apiControllerName + "/CreateFlexFieldObject";
+                    }
+                }
+
+                this.isLoading(true);
+                this.resetErrorState();
+                var self = this;
+                jQuery.ajax({ 
+                    url: url, 
+                    headers: GoNorth.Util.generateAntiForgeryHeader(),
+                    data: JSON.stringify(requestObject), 
+                    type: "POST",
+                    contentType: "application/json"
+                }).done(function(data) {
+                    if(!self.id())
+                    {
+                        self.id(data.id);
+                        var idAdd = "id=" + data.id;
+                        if(self.isTemplateMode())
+                        {
+                            GoNorth.Util.replaceUrlParameters("template=1&" + idAdd);
+                        }
+                        else
+                        {
+                            GoNorth.Util.replaceUrlParameters(idAdd);
+                        }
+                        self.acquireLock();
+                    }
+
+                    if(!self.isTemplateMode())
+                    {
+                        self.fieldManager.syncFieldIds(data);
+                        self.isImplemented(data.isImplemented);
+                    }
+
+                    if(distributeFields)
+                    {
+                        self.distributeFields();
+                    }
+                    else
+                    {
+                        self.isLoading(false);
+                    }
+
+                    self.runAfterSave(data);
+
+                    self.callObjectGridRefresh();
+                }).fail(function(xhr) {
+                    self.isLoading(false);
+                    self.errorOccured(true);
+                });
+            };
+
+            /**
+             * Runs logic after save
+             * 
+             * @param {object} data Returned data after save
+             */
+            ObjectForm.BaseViewModel.prototype.runAfterSave = function(data) {
+
+            };
+
+            /**
+             * Distributes the fields
+             */
+            ObjectForm.BaseViewModel.prototype.distributeFields = function() {
+                var self = this;
+                jQuery.ajax({ 
+                    url: "/api/" + this.apiControllerName + "/DistributeFlexFieldTemplateFields?id=" + this.id(), 
+                    headers: GoNorth.Util.generateAntiForgeryHeader(),
+                    type: "POST",
+                    contentType: "application/json"
+                }).done(function(data) {
+                    self.isLoading(false);
+                }).fail(function(xhr) {
+                    self.isLoading(false);
+                    self.errorOccured(true);
+                });
+            };
+
+            /**
+             * Opens the delete object dialog
+             */
+            ObjectForm.BaseViewModel.prototype.openDeleteObjectDialog = function() {
+                this.showConfirmObjectDeleteDialog(true);
+            };
+
+            /**
+             * Closes the confirm delete dialog
+             */
+            ObjectForm.BaseViewModel.prototype.closeConfirmObjectDeleteDialog = function() {
+                this.showConfirmObjectDeleteDialog(false);
+            };
+
+            /**
+             * Deletes the object
+             */
+            ObjectForm.BaseViewModel.prototype.deleteObject = function() {
+                var url = "/api/" + this.apiControllerName + "/DeleteFlexFieldObject";
+                if(this.isTemplateMode())
+                {
+                    url = "/api/" + this.apiControllerName + "/DeleteFlexFieldTemplate"
+                }
+                url += "?id=" + this.id();
+
+                this.isLoading(true);
+                this.resetErrorState();
+                var self = this;
+                jQuery.ajax({ 
+                    url: url, 
+                    headers: GoNorth.Util.generateAntiForgeryHeader(),
+                    type: "DELETE"
+                }).done(function(data) {
+                    self.callObjectGridRefresh();
+                    self.closeConfirmObjectDeleteDialog();
+                    window.location = self.rootPage;
+                }).fail(function(xhr) {
+                    self.isLoading(false);
+                    self.errorOccured(true);
+                    self.closeConfirmObjectDeleteDialog();
+
+                    // If object is related to anything that prevents deleting a bad request (400) will be returned
+                    if(xhr.status == 400 && xhr.responseText)
+                    {
+                        self.additionalErrorDetails(xhr.responseText);
+                    }
+                });
+            };
+
+
+            /**
+             * Callback if a new image file was uploaded
+             * 
+             * @param {string} image Image Filename that was uploaded
+             */
+            ObjectForm.BaseViewModel.prototype.imageUploaded = function(image) {
+                this.imageFilename(image);
+                this.callObjectGridRefresh();
+            };
+
+            /**
+             * Callback if an error occured during upload
+             * 
+             * @param {string} errorMessage Error Message
+             * @param {object} xhr Xhr Object
+             */
+            ObjectForm.BaseViewModel.prototype.imageUploadError = function(errorMessage, xhr) {
+                this.errorOccured(true);
+                if(xhr && xhr.responseText)
+                {
+                    this.additionalErrorDetails(xhr.responseText);
+                }
+                else
+                {
+                    this.additionalErrorDetails(errorMessage);
+                }
+            };
+
+
+            /**
+             * Opens the compare dialog for the current object
+             * 
+             * @returns {jQuery.Deferred} Deferred which gets resolved after the object is marked as implemented
+             */
+            ObjectForm.BaseViewModel.prototype.openCompareDialogForObject = function() {
+                var def = new jQuery.Deferred();
+                def.reject("Not implemented");
+                return def.promise();
+            };
+
+            /**
+             * Opens the compare dialog
+             */
+            ObjectForm.BaseViewModel.prototype.openCompareDialog = function() {
+                var self = this;
+                this.openCompareDialogForObject().done(function() {
+                    self.isImplemented(true);
+                });
+            };
+
+
+            /**
+             * Opens the export template
+             * 
+             * @param {number} templateType Type of the template
+             */
+            ObjectForm.BaseViewModel.prototype.openExportTemplate = function(templateType) {
+                if(!this.id())
+                {
+                    return;
+                }
+
+                var url = "/Export/ManageTemplate?templateType=" + templateType + "&customizedObjectId=" + this.id();
+                if(this.isTemplateMode())
+                {
+                    url += "&objectIsTemplate=1";
+                }
+                window.location = url;
+            };
+
+            /**
+             * Exports an object
+             * 
+             * @param {number} templateType Type of the template
+             * @param {string} exportFormat Format to export to (Script, JSON, Language)
+             */
+            ObjectForm.BaseViewModel.prototype.exportObject = function(templateType, exportFormat) {
+                this.exportResultFormat = exportFormat;
+                this.isLoading(true);
+                this.errorOccured(false);
+                var self = this;
+                jQuery.ajax({ 
+                    url: "/api/ExportApi/ExportObject?exportFormat=" + exportFormat + "&id=" + this.id() + "&templateType=" + templateType, 
+                    type: "GET"
+                }).done(function(data) {
+                    self.isLoading(false);
+                    self.showExportResultDialog(true);
+                    self.exportResultContent(data.code);
+                    self.exportResultErrors(data.errors);
+                }).fail(function(xhr) {
+                    self.closeExportResultDialog();
+                    self.errorOccured(true);
+                    self.isLoading(false);
+                });
+            };
+
+            /**
+             * Closes the export result dialog
+             */
+            ObjectForm.BaseViewModel.prototype.closeExportResultDialog = function() {
+                this.showExportResultDialog(false);
+                this.exportResultContent("");
+                this.exportResultErrors([]);
+            }; 
+
+            /**
+             * Downloads an export result
+             * 
+             * @param {number} templateType Type of the template
+             */
+            ObjectForm.BaseViewModel.prototype.exportDownload = function(templateType) {
+                window.location = "/api/ExportApi/ExportObjectDownload?exportFormat=" + this.exportResultFormat + "&id=" + this.id() + "&templateType=" + templateType; 
+            };
+
+            /**
+             * Copies the export result to the clipboard
+             */
+            ObjectForm.BaseViewModel.prototype.copyExportCodeToClipboard = function() {
+                var exportResultField = jQuery("#gn-flexFieldObjectExportResultTextarea")[0];
+                exportResultField.select();
+                document.execCommand("copy");
+
+                this.exportShowSuccessfullyCopiedTooltip(true);
+                var self = this;
+                setTimeout(function() {
+                    self.exportShowSuccessfullyCopiedTooltip(false);
+                }, 1000);
+            };
+
+
+            /**
+             * Opens the confirm regenerate language keys dialog
+             */
+            ObjectForm.BaseViewModel.prototype.openConfirmRegenerateLanguageKeysDialog = function() {
+                this.showConfirmRegenerateLanguageKeysDialog(true);
+            };
+
+            /**
+             * Regenerates the language keys
+             */
+            ObjectForm.BaseViewModel.prototype.regenerateLanguageKeys = function() {
+                this.isLoading(true);
+                this.resetErrorState();
+                var self = this;
+                jQuery.ajax({ 
+                    url: "/api/ExportApi/DeleteLanguageKeysByGroupId?groupId=" + this.id(), 
+                    headers: GoNorth.Util.generateAntiForgeryHeader(),
+                    type: "DELETE"
+                }).done(function(data) {
+                    self.isLoading(false);
+                    self.closeConfirmRegenerateLanguageKeysDialog();
+                }).fail(function(xhr) {
+                    self.isLoading(false);
+                    self.errorOccured(true);
+                    self.closeConfirmRegenerateLanguageKeysDialog();
+                });
+            };
+
+            /**
+             * Closes the confirm regenerate language keys dialog
+             */
+            ObjectForm.BaseViewModel.prototype.closeConfirmRegenerateLanguageKeysDialog = function() {
+                this.showConfirmRegenerateLanguageKeysDialog(false);
+            };
+
+
+            /**
+             * Loads the Aika quests
+             */
+            ObjectForm.BaseViewModel.prototype.loadAikaQuests = function() {
+                this.loadingReferencedInQuests(true);
+                this.errorLoadingReferencedInQuests(false);
+                var self = this;
+                jQuery.ajax({ 
+                    url: "/api/AikaApi/GetQuestsObjectIsReferenced?objectId=" + this.id(), 
+                    type: "GET"
+                }).done(function(data) {
+                    self.referencedInQuests(data);
+                    self.loadingReferencedInQuests(false);
+                }).fail(function(xhr) {
+                    self.errorLoadingReferencedInQuests(true);
+                    self.loadingReferencedInQuests(false);
+                });
+            };
+
+            /**
+             * Builds the url for an Aika quest
+             * 
+             * @param {object} quest Quest to build the url
+             * @returns {string} Url for quest
+             */
+            ObjectForm.BaseViewModel.prototype.buildAikaQuestUrl = function(quest) {
+                return "/Aika/Quest?id=" + quest.id;
+            };
+
+
+            /**
+             * Loads the kirja pages
+             */
+            ObjectForm.BaseViewModel.prototype.loadKirjaPages = function() {
+                this.loadingMentionedInKirjaPages(true);
+                this.errorLoadingMentionedInKirjaPages(false);
+                var self = this;
+                jQuery.ajax({ 
+                    url: "/api/KirjaApi/" + this.kirjaApiMentionedMethod + this.id(), 
+                    type: "GET"
+                }).done(function(data) {
+                    self.mentionedInKirjaPages(data);
+                    self.loadingMentionedInKirjaPages(false);
+                }).fail(function(xhr) {
+                    self.errorLoadingMentionedInKirjaPages(true);
+                    self.loadingMentionedInKirjaPages(false);
+                });
+            };
+
+            /**
+             * Builds the url for a Kirja page
+             * 
+             * @param {object} page Page to build the url for
+             * @returns {string} Url for the page
+             */
+            ObjectForm.BaseViewModel.prototype.buildKirjaPageUrl = function(page) {
+                return "/Kirja?id=" + page.id;
+            };
+
+
+            /**
+             * Loads the karta maps
+             */
+            ObjectForm.BaseViewModel.prototype.loadKartaMaps = function() {
+                if(!this.kartaApiMarkedMethod)
+                {
+                    return;
+                }
+
+                this.loadingMarkedInKartaMaps(true);
+                this.errorLoadingMarkedInKartaMaps(false);
+                var self = this;
+                jQuery.ajax({ 
+                    url: "/api/KartaApi/" + this.kartaApiMarkedMethod + this.id(), 
+                    type: "GET"
+                }).done(function(data) {
+                    for(var curMap = 0; curMap < data.length; ++curMap)
+                    {
+                        data[curMap].tooltip = self.buildKartaMapMarkerCountTooltip(data[curMap]);
+                    }
+                    self.markedInKartaMaps(data);
+                    self.loadingMarkedInKartaMaps(false);
+                }).fail(function(xhr) {
+                    self.errorLoadingMarkedInKartaMaps(true);
+                    self.loadingMarkedInKartaMaps(false);
+                });
+            };
+
+            /**
+             * Builds the Tooltip for a marker count
+             * 
+             * @param {object} map Map to build the tooltip for
+             * @returns {string} Tooltip for marker count
+             */
+            ObjectForm.BaseViewModel.prototype.buildKartaMapMarkerCountTooltip = function(map) {
+                return GoNorth.FlexFieldDatabase.ObjectForm.Localization.MarkedInMapNTimes.replace("{0}", map.markerIds.length);
+            };
+
+            /**
+             * Builds the url for a Karta map
+             * 
+             * @param {object} map Map to build the url for
+             * @returns {string} Url for the map
+             */
+            ObjectForm.BaseViewModel.prototype.buildKartaMapUrl = function(map) {
+                var url = "/Karta?id=" + map.mapId;
+                if(map.markerIds.length == 1)
+                {
+                    url += "&zoomOnMarkerId=" + map.markerIds[0] + "&zoomOnMarkerType=" + map.mapMarkerType
+                }
+                return url;
+            };
+
+
+            /**
+             * Loads the tale dialogs
+             */
+            ObjectForm.BaseViewModel.prototype.loadTaleDialogs = function() {
+                this.loadingReferencedInTaleDialogs(true);
+                this.errorLoadingReferencedInTaleDialogs(false);
+                var self = this;
+                jQuery.ajax({ 
+                    url: "/api/TaleApi/GetDialogsObjectIsReferenced?objectId=" + this.id(), 
+                    type: "GET"
+                }).done(function(dialogs) {
+                    var npcIds = [];
+                    for(var curDialog = 0; curDialog < dialogs.length; ++curDialog)
+                    {
+                        if(dialogs[curDialog].relatedObjectId != self.id())
+                        {
+                            npcIds.push(dialogs[curDialog].relatedObjectId);
+                        }
+                    }
+
+                    if(npcIds.length == 0)
+                    {
+                        self.referencedInTaleDialogs([]);
+                        self.loadingReferencedInTaleDialogs(false);
+                        return;
+                    }
+
+                    // Get Npc names of the dialog npcs
+                    jQuery.ajax({ 
+                        url: "/api/KortistoApi/ResolveFlexFieldObjectNames", 
+                        headers: GoNorth.Util.generateAntiForgeryHeader(),
+                        data: JSON.stringify(npcIds), 
+                        type: "POST",
+                        contentType: "application/json"
+                    }).done(function(npcNames) {
+                        self.referencedInTaleDialogs(npcNames);
+                        self.loadingReferencedInTaleDialogs(false);
+                    }).fail(function(xhr) {
+                        self.errorLoadingReferencedInTaleDialogs(true);
+                        self.loadingReferencedInTaleDialogs(false);
+                    });
+                }).fail(function(xhr) {
+                    self.errorLoadingReferencedInTaleDialogs(true);
+                    self.loadingReferencedInTaleDialogs(false);
+                });
+            };
+
+            /**
+             * Builds the url for a Tale dialog
+             * 
+             * @param {object} dialogNpc Npc for which to open the dialog
+             * @returns {string} Url for the dialog
+             */
+            ObjectForm.BaseViewModel.prototype.buildTaleDialogUrl = function(dialogNpc) {
+                return "/Tale?npcId=" + dialogNpc.id;
+            };
+
+
+            /**
+             * Acquires a lock
+             */
+            ObjectForm.BaseViewModel.prototype.acquireLock = function() {
+                var category = this.lockName;
+                if(this.isTemplateMode())
+                {
+                    category = this.templateLockName;
+                }
+
+                var self = this;
+                GoNorth.LockService.acquireLock(category, this.id()).done(function(isLocked, lockedUsername) {
+                    if(isLocked)
+                    {
+                        self.isReadonly(true);
+                        self.lockedByUser(lockedUsername);
+                        self.setAdditionalDataToReadonly();
+                    }
+                }).fail(function() {
+                    self.errorOccured(true);
+                    self.isReadonly(true);
+                });
+            };
+
+            /**
+             * Sets additional data to readonly
+             */
+            ObjectForm.BaseViewModel.prototype.setAdditionalDataToReadonly = function() {
+
+            };
+
+
+            /**
+             * Calls the refresh for the object grid of the parent window
+             */
+            ObjectForm.BaseViewModel.prototype.callObjectGridRefresh = function() {
+                if(window.refreshFlexFieldObjectGrid)
+                {
+                    window.refreshFlexFieldObjectGrid();
+                }
+            };
+
+        }(FlexFieldDatabase.ObjectForm = FlexFieldDatabase.ObjectForm || {}));
+    }(GoNorth.FlexFieldDatabase = GoNorth.FlexFieldDatabase || {}));
+}(window.GoNorth = window.GoNorth || {}));
+(function(GoNorth) {
+    "use strict";
+    (function(Kortisto) {
+        (function(Npc) {
+
+            /**
+             * Npc View Model
+             * @class
+             */
+            Npc.ViewModel = function()
+            {
+                GoNorth.FlexFieldDatabase.ObjectForm.BaseViewModel.apply(this, [ "/Kortisto", "KortistoApi", "KortistoNpc", "KortistoTemplate", "GetPagesByNpc?npcId=", "GetMapsByNpcId?npcId=" ]);
+
+                this.showConfirmRemoveDialog = new ko.observable(false);
+                this.isRemovingItem = new ko.observable(false);
+
+                this.objectDialog = new GoNorth.ChooseObjectDialog.ViewModel();
+                this.inventoryItems = new ko.observableArray();
+                this.itemToRemove = null;
+                this.isLoadingInventory = new ko.observable(false);
+                this.loadingInventoryError = new ko.observable(false);
+
+                this.learnedSkills = new ko.observableArray();
+                this.skillToRemove = null;
+                this.isLoadingSkills = new ko.observable(false);
+                this.loadingSkillsError = new ko.observable(false);
+
+                this.isPlayerNpc = new ko.observable(false);
+
+                this.showMarkAsPlayerDialog = new ko.observable(false);
+
+                this.nameGenTemplate = new ko.observable("ss"); // Default Setting is very simple name
+                this.nameGenDialogTemplate = new ko.observable("");
+                this.showNameGenSettingsDialog = new ko.observable(false);
+                this.nameGenSample = new ko.observable("");
+                this.nameGenTemplateError = new ko.observable(false);
+                this.nameGenTemplateErrorDescription = new ko.observable("");
+
+                var self = this;
+                this.nameGenDialogTemplate.subscribe(function() {
+                    self.generateSampleNameGenName();
+                });
+
+                this.dialogExists = new ko.observable(false);
+                this.dialogImplemented = new ko.observable(false);
+
+                this.init();
+
+                if(GoNorth.FlexFieldDatabase.ObjectForm.hasImplementationStatusTrackerRights && GoNorth.FlexFieldDatabase.ObjectForm.hasTaleRights && this.id())
+                {
+                    this.loadDialogImplementationState();
+                }
+            };
+
+            Npc.ViewModel.prototype = jQuery.extend({ }, GoNorth.FlexFieldDatabase.ObjectForm.BaseViewModel.prototype);
+
+            /**
+             * Parses additional data from a loaded object
+             * 
+             * @param {object} data Data returned from the webservice
+             */
+            Npc.ViewModel.prototype.parseAdditionalData = function(data) {
+                if(!this.isTemplateMode())
+                {
+                    this.isPlayerNpc(data.isPlayerNpc);
+                }
+
+                this.nameGenTemplate(data.nameGenTemplate ? data.nameGenTemplate : "");
+
+                if(Npc.hasStyrRights && data.inventory && data.inventory.length > 0)
+                {
+                    this.loadInventory(data.inventory);
+                }
+
+                if(Npc.hasEvneRights && data.skills && data.skills.length > 0)
+                {
+                    this.loadSkills(data.skills);
+                }
+            };
+
+            /**
+             * Opens the compare dialog for the current object
+             * 
+             * @returns {jQuery.Deferred} Deferred which gets resolved after the object is marked as implemented
+             */
+            Npc.ViewModel.prototype.openCompareDialogForObject = function() {
+                return this.compareDialog.openNpcCompare(this.id(), this.objectName());
+            };
+
+            /**
+             * Loads the state of the dialog implementation state
+             */
+            Npc.ViewModel.prototype.loadDialogImplementationState = function() {
+                var self = this;
+                jQuery.ajax({ 
+                    url: "/api/TaleApi/IsDialogImplementedByRelatedObjectId?relatedObjectId=" + this.id(), 
+                    type: "GET"
+                }).done(function(data) {
+                    self.dialogExists(data.exists);
+                    self.dialogImplemented(data.isImplemented);
+                }).fail(function(xhr) {
+                    self.errorOccured(true);
+                });
+            }
+
+            /**
+             * Loads the inventory
+             * 
+             * @param {object[]} inventory Inventory to load
+             */
+            Npc.ViewModel.prototype.loadInventory = function(inventory) {
+                var inventoryItemIds = [];
+                var itemLookup = {};
+                for(var curItem = 0; curItem < inventory.length; ++curItem)
+                {
+                    inventoryItemIds.push(inventory[curItem].itemId);
+                    itemLookup[inventory[curItem].itemId] = inventory[curItem];
+                }
+
+                this.isLoadingInventory(true);
+                this.loadingInventoryError(false);
+                var self = this;
+                jQuery.ajax({ 
+                    url: "/api/StyrApi/ResolveFlexFieldObjectNames", 
+                    headers: GoNorth.Util.generateAntiForgeryHeader(),
+                    data: JSON.stringify(inventoryItemIds), 
+                    type: "POST",
+                    contentType: "application/json"
+                }).done(function(itemNames) {
+                    var loadedInventoryItems = [];
+                    for(var curItem = 0; curItem < itemNames.length; ++curItem)
+                    {
+                        loadedInventoryItems.push({
+                            id: itemNames[curItem].id,
+                            name: itemNames[curItem].name,
+                            quantity: new ko.observable(itemLookup[itemNames[curItem].id].quantity),
+                            isEquipped: new ko.observable(itemLookup[itemNames[curItem].id].isEquipped)
+                        });
+                    }
+
+                    self.inventoryItems(loadedInventoryItems);
+                    self.isLoadingInventory(false);
+                }).fail(function(xhr) {
+                    self.inventoryItems([]);
+                    self.isLoadingInventory(false);
+                    self.loadingInventoryError(true);
+                });
+            };
+
+            /**
+             * Loads the skills of the npc
+             * 
+             * @param {object[]} skills Skills of the npc
+             */
+            Npc.ViewModel.prototype.loadSkills = function(skills) {
+                var learnedSkillIds = [];
+                for(var curSkill = 0; curSkill < skills.length; ++curSkill )
+                {
+                    learnedSkillIds.push(skills[curSkill].skillId);
+                }
+
+                this.isLoadingSkills(true);
+                this.loadingSkillsError(false);
+                var self = this;
+                jQuery.ajax({ 
+                    url: "/api/EvneApi/ResolveFlexFieldObjectNames", 
+                    headers: GoNorth.Util.generateAntiForgeryHeader(),
+                    data: JSON.stringify(learnedSkillIds), 
+                    type: "POST",
+                    contentType: "application/json"
+                }).done(function(skillNames) {
+                    var loadedSkills = [];
+                    for(var curSkill = 0; curSkill < skillNames.length; ++curSkill)
+                    {
+                        loadedSkills.push({
+                            id: skillNames[curSkill].id,
+                            name: skillNames[curSkill].name,
+                        });
+                    }
+
+                    self.learnedSkills(loadedSkills);
+                    self.isLoadingSkills(false);
+                }).fail(function(xhr) {
+                    self.learnedSkills([]);
+                    self.isLoadingSkills(false);
+                    self.loadingSkillsError(true);
+                });
+            };
+
+            /**
+             * Sets Additional save data
+             * 
+             * @param {object} data Save data
+             * @returns {object} Save data with additional values
+             */
+            Npc.ViewModel.prototype.setAdditionalSaveData = function(data) {
+                data.isPlayerNpc = this.isPlayerNpc();
+                data.nameGenTemplate = this.nameGenTemplate();
+                data.inventory = this.serializeInventory();
+                data.skills = this.serializeSkills();
+
+                return data;
+            };
+
+            /**
+             * Serializes the inventory
+             * 
+             * @returns {object[]} Serialized inventory
+             */
+            Npc.ViewModel.prototype.serializeInventory = function() {
+                var inventory = [];
+                var inventoryItems = this.inventoryItems();
+                for(var curItem = 0; curItem < inventoryItems.length; ++curItem)
+                {
+                    var quantity = parseInt(inventoryItems[curItem].quantity());
+                    if(isNaN(quantity))
+                    {
+                        quantity = 1;
+                    }
+
+                    var item = {
+                        itemId: inventoryItems[curItem].id,
+                        quantity: quantity,
+                        isEquipped: inventoryItems[curItem].isEquipped(),
+                    };
+                    inventory.push(item);
+                }
+
+                return inventory;
+            };
+
+            /**
+             * Serializes the skills
+             * 
+             * @returns {object[]} Serialized skills
+             */
+            Npc.ViewModel.prototype.serializeSkills = function() {
+                var skills = [];
+                var learnedSkills = this.learnedSkills();
+                for(var curSkill = 0; curSkill < learnedSkills.length; ++curSkill)
+                {
+                    var skill = {
+                        skillId: learnedSkills[curSkill].id
+                    };
+                    skills.push(skill);
+                }
+
+                return skills;
+            };
+
+
+
+            /**
+             * Checks if an object exists in a flex field array
+             * 
+             * @param {ko.observableArray} searchArray Array to search
+             * @param {object} objectToSearch Flex Field object to search
+             */
+            Npc.ViewModel.prototype.doesObjectExistInFlexFieldArray = function(searchArray, objectToSearch)
+            {
+                var searchObjects = searchArray();
+                for(var curObject = 0; curObject < searchObjects.length; ++curObject)
+                {
+                    if(searchObjects[curObject].id == objectToSearch.id)
+                    {
+                        return true;
+                    }
+                }
+
+                return false;
+            }
+
+
+            /**
+             * Adds an item to the inventory
+             */
+            Npc.ViewModel.prototype.addItemToInventory = function() {
+                var self = this;
+                this.objectDialog.openItemSearch(Npc.Localization.AddItemToInventory).then(function(item) {
+                    if(self.doesObjectExistInFlexFieldArray(self.inventoryItems, item))
+                    {
+                        return;
+                    }
+
+                    self.inventoryItems.push({
+                        id: item.id,
+                        name: item.name,
+                        quantity: new ko.observable(1),
+                        isEquipped: new ko.observable(false)
+                    });
+
+                    self.inventoryItems.sort(function(item1, item2) {
+                        return item1.name.localeCompare(item2.name);
+                    });
+                });
+            };
+
+            /**
+             * Opens a dialog to add a new skill
+             */
+            Npc.ViewModel.prototype.addSkill = function() {
+                var self = this;
+                this.objectDialog.openSkillSearch(Npc.Localization.AddSkill).then(function(skill) {
+                    if(self.doesObjectExistInFlexFieldArray(self.learnedSkills, skill))
+                    {
+                        return;
+                    }
+
+                    self.learnedSkills.push({
+                        id: skill.id,
+                        name: skill.name
+                    });
+
+                    self.learnedSkills.sort(function(skill1, skill2) {
+                        return skill1.name.localeCompare(skill2.name);
+                    });
+                });
+            };
+
+            /**
+             * Builds the url for an item
+             * 
+             * @param {object} item Item which should be opened
+             * @returns {string} Url for the item
+             */
+            Npc.ViewModel.prototype.buildItemUrl = function(item) {
+                return "/Styr/Item?id=" + item.id;
+            };
+
+            /**
+             * Builds the url for a skill
+             * 
+             * @param {object} skill Skill which should be opened
+             * @returns {string} Url for the skill
+             */
+            Npc.ViewModel.prototype.buildSkillUrl = function(skill) {
+                return "/Evne/Skill?id=" + skill.id;
+            };
+
+            /**
+             * Removes an item from the inventory
+             * 
+             * @param {object} item Item to remove
+             */
+            Npc.ViewModel.prototype.openRemoveItemDialog = function(item) {
+                this.itemToRemove = item;
+                this.skillToRemove = null;
+                this.isRemovingItem(true);
+                this.showConfirmRemoveDialog(true);
+            };
+
+            /**
+             * Removes a skill
+             * 
+             * @param {object} skill Skill to remove
+             */
+            Npc.ViewModel.prototype.openRemoveSkillDialog = function(skill) {
+                this.skillToRemove = skill;
+                this.itemToRemove = null;
+                this.isRemovingItem(false);
+                this.showConfirmRemoveDialog(true);
+            };
+
+            /**
+             * Removes the object which should be removed
+             */
+            Npc.ViewModel.prototype.removeObject = function() {
+                if(this.itemToRemove)
+                {
+                    this.inventoryItems.remove(this.itemToRemove);
+                }
+
+                if(this.skillToRemove)
+                {
+                    this.learnedSkills.remove(this.skillToRemove);
+                }
+
+                this.closeConfirmRemoveDialog();
+            };
+
+            /**
+             * Closes the confirm remove dialog
+             */
+            Npc.ViewModel.prototype.closeConfirmRemoveDialog = function() {
+                this.itemToRemove = null;
+                this.skillToRemove = null;
+                this.showConfirmRemoveDialog(false);
+            };
+
+
+            /**
+             * Opens the tale dialog for the npc
+             */
+            Npc.ViewModel.prototype.openTale = function() {
+                if(!this.id())
+                {
+                    return;
+                }
+
+                window.location = "/Tale?npcId=" + this.id();
+            };
+
+
+            /**
+             * Opens the mark as playe dialog
+             */
+            Npc.ViewModel.prototype.openMarkAsPlayerDialog = function() {
+                this.showMarkAsPlayerDialog(true);
+            };
+
+            /**
+             * Closes the mark as player dialog
+             */
+            Npc.ViewModel.prototype.closeMarkAsPlayerDialog = function() {
+                this.showMarkAsPlayerDialog(false);
+            };
+
+            /**
+             * Marks the npc as a player
+             */
+            Npc.ViewModel.prototype.markAsPlayer = function() {
+                this.isPlayerNpc(true);
+                this.closeMarkAsPlayerDialog();
+                this.save();
+            };
+
+
+            /**
+             * Opens the name generator settings
+             */
+            Npc.ViewModel.prototype.openNameGenSettings = function() {
+                this.showNameGenSettingsDialog(true);
+                this.nameGenTemplateError(false);
+                this.nameGenTemplateErrorDescription("");
+                this.nameGenDialogTemplate(this.nameGenTemplate());
+            };
+
+            /**
+             * Saves the name generator settings
+             */
+            Npc.ViewModel.prototype.saveNameGenSettings = function() {
+                if(this.nameGenTemplateError())
+                {
+                    return;
+                }
+
+                this.nameGenTemplate(this.nameGenDialogTemplate());
+                this.closeNameGenDialog();
+            };
+
+            /**
+             * Generates a sample name for the name gen settings
+             */
+            Npc.ViewModel.prototype.generateSampleNameGenName = function() {
+                this.nameGenTemplateError(false);
+                this.nameGenTemplateErrorDescription("");
+                if(!this.nameGenDialogTemplate())
+                {
+                    this.nameGenSample("");
+                    return;
+                }
+
+                try
+                {
+                    this.nameGenSample(this.createRandomName(this.nameGenDialogTemplate()));
+                }
+                catch(e)
+                {
+                    this.nameGenSample("");
+                    this.nameGenTemplateError(true);
+                    switch(e.message)
+                    {
+                    case "MISSING_CLOSING_BRACKET":
+                        this.nameGenTemplateErrorDescription(GoNorth.Kortisto.Npc.Localization.NameGenMissingClosingBracket)
+                        break;
+                    case "UNBALANCED_BRACKETS":
+                        this.nameGenTemplateErrorDescription(GoNorth.Kortisto.Npc.Localization.NameGenUnbalancedBrackets)
+                        break;
+                    case "UNEXPECTED_<_IN_INPUT":
+                        this.nameGenTemplateErrorDescription(GoNorth.Kortisto.Npc.Localization.NameGenUnexpectedPointyBracketInInput)
+                        break;
+                    case "UNEXPECTED_)_IN_INPUT":
+                        this.nameGenTemplateErrorDescription(GoNorth.Kortisto.Npc.Localization.NameGenUnexpectedRoundBracketInInput)
+                        break;
+                    default:
+                        this.nameGenTemplateErrorDescription(GoNorth.Kortisto.Npc.Localization.NameGenUnknownError)
+                    }
+                }
+            };
+
+            /**
+             * Closes the name generator settings
+             */
+            Npc.ViewModel.prototype.closeNameGenDialog = function() {
+                this.showNameGenSettingsDialog(false);
+            };
+
+
+            /**
+             * Generates a new name for the npc
+             */
+            Npc.ViewModel.prototype.generateName = function() {
+                this.objectName(this.createRandomName(this.nameGenTemplate()));
+            };
+            
+            /**
+             * Creates a random name
+             * 
+             * @returns {string} Random Name 
+             */
+            Npc.ViewModel.prototype.createRandomName = function(template) {
+                var generator = NameGen.compile(template);
+                var name = generator.toString();
+
+                // Capitalize first letter
+                if(name && name.length > 0)
+                {
+                    name = name.charAt(0).toUpperCase() + name.slice(1);
+                }
+
+                return name;
+            };
+
+        }(Kortisto.Npc = Kortisto.Npc || {}));
+    }(GoNorth.Kortisto = GoNorth.Kortisto || {}));
+}(window.GoNorth = window.GoNorth || {}));

@@ -1,0 +1,70 @@
+{
+    "Tasks": "Tasks",
+
+    "StartingFrom": "Start",
+
+    "CreateTaskGroup": "Create task group",
+    "CreateTaskToolTip": "Create task",
+    
+    "NoOpenBoards": "No open task board exists at the moment.",
+    "ClickHereManageBoards": "Click here",
+    "ClickHereManageBoardsPostfix": " to create a new one or open an old task board.",
+    "SelectTaskBoard": "Please select a task board before creating a task group",
+
+    "SwitchBoard": "Switch task board",
+    "ManageBoards": "Manage task boards",
+    "ManageTaskTypes": "Manage task type",
+
+    "InsertKirjaLink": "Add link to Kirja page",
+    "InsertAikaQuestLink": "Add link to quest",
+    "InsertKortistoNpcLink": "Add link to npc",
+    "InsertStyrItemLink": "Add link to item",
+
+    "DialogTaskNumberPrefix": "(#",
+    "DialogTaskNumberPostfix": ")",
+    "NewTaskGroup": "New task group",
+    "EditTaskGroup": "Edit task group",
+    "NewTask": "New task",
+    "EditTask": "Edit task",
+    "TaskType": "Type",
+    "Name": "Name",
+    "Description": "Description",
+    "PressCtrlToOpenLinks": "Ctrl to open links",
+    "AssignedTo": "Assigned to",
+    "Delete": "Delete",
+    "MoveToOtherBoard": "Move to board",
+    "Save": "Save",
+    "Cancel": "Cancel",
+
+    "AreYouSure": "Are you sure?",
+    "AreYouSureYouWantToDeleteTheTaskGroup": "Are you sure you want to delete the task group?",
+    "AreYouSureYouWantToDeleteTheTask": "Are you sure you want to delete the task?",
+    "Yes": "Yes",
+    "No": "No",
+
+    "SelectTarget": "Select target",
+    "TargetBoard": "Target board",
+    "TargetTaskGroup": "Target task group",
+    "Choose": "Choose...",
+    "Move": "Move",
+
+    "Unassigned": "Unassigned",
+
+    "TasksSingle": "Task",
+    "TasksMulti": "Tasks",
+
+    "TaskStatusOpen": "Open",
+    "TaskStatusInProgress": "In progress",
+    "TaskStatusDone": "Done",
+
+    "Error": "Error:",
+    "ErrorOccured": "An error occured.",
+
+    "Locked": "Locked",
+    "LockedTaskGroupPrefix": "This task group is currently being edited by ",
+    "LockedTaskPrefix": "This task is currently being edited by ",
+    "LockedPostfix": ".",
+    "BoardIsClosed": "The board is already closed.",
+
+    "RichTextLocale": "en"
+}

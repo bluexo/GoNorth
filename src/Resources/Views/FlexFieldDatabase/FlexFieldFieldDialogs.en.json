@@ -1,0 +1,26 @@
+{
+    "EditField": "Edit field",
+    "AddField": "Add field",
+    "EditFieldGroup": "Edit field group",
+    "AddFieldGroup": "Add field group",
+    "Name": "Name",
+    "Save": "Save",
+    "Cancel": "Cancel",
+
+    "FieldNameIsAlreadyInUse": "The name is already in use.",
+
+    "AreYouSure": "Are you sure?",
+    "AreYouSureYouWantToDeleteTheField": "Are you sure you want to delete the field?",
+    "AreYouSureYouWantToDeleteTheFieldGroup": "Are you sure you want to delete the field group?",
+    "AllFieldsInTheGroupWillBeKept": "The fields in the group will not be deleted.",
+    "Yes": "Yes",
+    "No": "No",
+    
+    "FieldScriptSetting": "Field script settings",
+    "DontExportToScript": "Dont export to script",
+    "AdditionalScriptNames": "Additional script names (Comma separated)",
+
+    "ConfigCanOnlyBeEditedInTemplate": "This setting can only be changed in the template",
+
+    "ExpandedByDefault": "Is expanded by default"
+}

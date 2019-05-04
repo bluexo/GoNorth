@@ -1,0 +1,49 @@
+{
+    "TaskBoards": "Task boards",
+
+    "CreateNewBoard": "Create task board",
+    "CreateTaskBoard": "Create task board",
+    "EditTaskBoard": "Edit task board",
+
+    "OpenTaskBoards": "Open task boards",
+    "ClosedTaskBoards": "Closed task boards",
+
+    "Name": "Name",
+    "Category": "Category",
+    "NoCategory": "No category",
+    "PlannedStart": "Planned start",
+    "PlannedEnd": "Planned end",
+    "Save": "Save",
+    "Cancel": "Cancel",
+    "StartDateHasToBeBeforeEndDate": "The planned start must be before the planned end.",
+
+    "EditBoardToolTip": "Edit task board",
+    "DeleteBoardToolTip": "Delete task board",
+    "CloseTaskBoardToolTip": "Close task board",
+    "ReopenTaskBoardToolTip": "Reopen task board",
+
+    "TaskBoardCategories": "Task board categories",
+    "CreateNewBoardCategory": "Create new category",
+    "CreateTaskBoardCategory": "Create new category",
+    "EditTaskBoardCategory": "Edit category",
+    "IsExpandedByDefault": "Expanded",
+    "IsExpandedByDefaultCheckbox": "Expanded by default",
+    "EditBoardCategoryToolTip": "Edit task board category",
+    "DeleteBoardCategoryToolTip": "Delete task board category",
+    "Warning": "Warning:",
+    "CategoryIsUsedByBoard": "This task board category is used by boards. Their category will be reset.",
+
+    "AreYouSure": "Are you sure?",
+    "AreYouSureYouWantToDeleteTheBoard": "Are you sure you want to delete the task board?",
+    "AreYouSureYouWantToCloseTheBoard": "Are you sure you want to close the task board?",
+    "AreYouSureYouWantToReopenTheBoard": "Are you sure you want to reopen the task board?",
+    "AreYouSureYouWantToDeleteTheBoardCategory": "Are you sure you want to delete the board category?",
+    "Yes": "Yes",
+    "No": "No",
+
+    "PreviousPage": "Previous page",
+    "NextPage": "Next page",
+    
+    "Error": "Error:",
+    "ErrorOccured": "An error occured."
+}

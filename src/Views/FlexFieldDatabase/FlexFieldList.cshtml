@@ -1,0 +1,6 @@
+<div data-bind="sortable: { data: fieldManager.fields, connectClass: 'fieldList', isEnabled: !$root.isReadonly(), options: { handle: '.gn-flexFieldDragHandle' }, beforeMove: function(e) { $root.checkFieldDropAllowed(e); } }">
+    <div class="form-group">
+        <!-- ko template: { name: getTemplateName(), data: $data } -->
+        <!-- /ko -->
+    </div>
+</div>
